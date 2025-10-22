@@ -13,7 +13,7 @@ import (
 
 func TestGetHandler(t *testing.T) {
 	short := &service.Short{
-		CacheUrl: make(map[string]string),
+		CacheURL: make(map[string]string),
 	}
 	handlers := &Handlers{Short: short}
 	// даем новый url
@@ -33,7 +33,7 @@ func TestGetHandler(t *testing.T) {
 	// Создаём маршрутизатор
 	r := mux.NewRouter()
 	r.HandleFunc("/{id}", handlers.getHandler).Methods("GET")
-	// 3: Валидный запрос
+	// 3:Валидный запрос  
 	parts := strings.Split(URL, "/")
 	URL = parts[3]
 	req = httptest.NewRequest(http.MethodGet, "/"+URL, nil)

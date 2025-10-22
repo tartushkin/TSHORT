@@ -11,7 +11,7 @@ import (
 
 func TestPostHandler(t *testing.T) {
 	short := &service.Short{
-		CacheUrl: make(map[string]string),
+		CacheURL: make(map[string]string),
 	}
 	handlers := &Handlers{Short: short}
 
