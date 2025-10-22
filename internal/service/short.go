@@ -7,7 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 )
-
+//
 type Short struct {
 	Logger   *logrus.Logger
 	Ctx      context.Context
