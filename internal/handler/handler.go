@@ -51,7 +51,7 @@ func (h *Handlers) getHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
 	}
 	url, err := h.Short.GetAliasName(parts[1])
-	fmt.Println("шо тут у нас", url)
+	
 	if err != nil {
 		http.Error(w, "Error: "+err.Error(), http.StatusInternalServerError)
 	}
