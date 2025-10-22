@@ -41,11 +41,6 @@ func (h *Handlers) getHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	contentType := r.Header.Get("Content-Type")
-	if contentType != "text/plain" {
-		http.Error(w, "Content-Type must be text/plain", http.StatusBadRequest)
-		return
-	}
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < 2 {
 		http.Error(w, "Not Found", http.StatusNotFound)
