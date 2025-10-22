@@ -10,7 +10,7 @@ import (
 type Short struct {
 	Logger   *logrus.Logger
 	Ctx      context.Context
-	HttpPort string
+	HTTPPort string
 	Address  string
 
 	CacheURL map[string]string
@@ -24,7 +24,7 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Configure) *Short {
 		Logger:   lg,
 		Ctx:      ctx,
 		CacheURL: cacheURL,
-		HttpPort: cfg.Port,
+		HTTPPort: cfg.Port,
 		Address:  cfg.Address,
 	}
 	return sh
