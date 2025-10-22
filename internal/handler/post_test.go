@@ -91,7 +91,7 @@ func TestPostHandler(t *testing.T) {
 	// Вызываем postHandler
 	if assert.NoError(t, handlers.postURLHandler(c)) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
-		assert.Equal(t, "text/plain", rec.Header().Get("Content-Type"))
+		assert.Equal(t, "text/plain; charset=UTF-8", rec.Header().Get("Content-Type"))
 
 		// Проверяем, что ответ содержит сокращённый URL
 		body := rec.Body.String()
