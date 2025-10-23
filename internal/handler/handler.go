@@ -3,9 +3,8 @@ package handler
 import (
 	"io"
 	"net/http"
-	"fmt"
 	"strings"
-
+    "fmt"
 	"github.com/labstack/echo/v4"
 )
 
@@ -28,7 +27,7 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 
 	aliaseURL := h.Short.SetAliaseName(string(body))
 
-	shortURL := fmt.Sprintf("%s:%s/%s",strings.TrimSpace(h.Short.Address),h.Short.HTTPPort,aliaseURL)
+	shortURL := fmt.Sprintf("%s%s/%s",strings.TrimSpace(h.Short.Address),h.Short.HTTPPort,aliaseURL)
 	
 	return ctx.String(http.StatusCreated, shortURL)
 
