@@ -18,7 +18,7 @@ func main() {
 
 	h := handler.NewHandlers(sh)
     port := fmt.Sprintf(":%s", cfg.Port)
-	go h.StartHTTP(ctx, cfg.port) // запуск сервера
+	go h.StartHTTP(ctx, port) // запуск сервера
 	lg.Info("Listner", fmt.Sprintf("Запущен http слушатель на порту %s", cfg.Port))
 
 	go func() {
