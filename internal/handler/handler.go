@@ -28,7 +28,7 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 
 	aliaseURL := h.Short.SetAliaseName(string(body))
 
-	shortURL := fmt.Sprintf("%s%s",strings.TrimSpace(h.Short.Address),aliaseURL)
+	shortURL := fmt.Sprintf("%s:%s/%s",strings.TrimSpace(h.Short.Address),h.Short.HTTPPort,aliaseURL)
 	
 	return ctx.String(http.StatusCreated, shortURL)
 
