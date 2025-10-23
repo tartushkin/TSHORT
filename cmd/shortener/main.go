@@ -17,8 +17,8 @@ func main() {
 	sh := sr.Create(ctx, lg, cfg) // инициализация сервиса
 
 	h := handler.NewHandlers(sh)
-
-	go h.StartHTTP(ctx, cfg.Port) // запуск сервера
+    port := fmt.Sprintf(":%s", cfg.Port)
+	go h.StartHTTP(ctx, cfg.port) // запуск сервера
 	lg.Info("Listner", fmt.Sprintf("Запущен http слушатель на порту %s", cfg.Port))
 
 	go func() {
