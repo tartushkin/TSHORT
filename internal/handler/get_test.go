@@ -5,13 +5,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
-
 
 func TestGetHandler(t *testing.T) {
 	// Инициализация
@@ -34,14 +32,13 @@ func TestGetHandler(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
 	}
 	shortURL := rec.Body.String()
-	parts := strings.Split(shortURL, "/")
-	URL := parts[1]
+
 	// 2. Проверяем не-GET запрос (должен вернуть 405)
-	req = httptest.NewRequest(http.MethodPost, "/:"+URL, nil)
+	req = httptest.NewRequest(http.MethodPost, "/:"+shortURL, nil)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 	c.SetParamNames("id")
-	c.SetParamValues(URL)
+	c.SetParamValues(shortURL)
 
 	// Вызываем getHandler с неверным методом
 	if assert.NoError(t, handlers.getRedirectHandler(c)) {
@@ -49,11 +46,11 @@ func TestGetHandler(t *testing.T) {
 	}
 
 	// 3. Создаём маршрут для GET-запроса
-	req = httptest.NewRequest(http.MethodGet, "/:"+URL, nil)
+	req = httptest.NewRequest(http.MethodGet, "/:"+shortURL, nil)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 	c.SetParamNames("id")
-	c.SetParamValues(URL)
+	c.SetParamValues(shortURL)
 
 	// Вызываем getHandler
 	if assert.NoError(t, handlers.getRedirectHandler(c)) {
