@@ -25,7 +25,7 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Configure) *Short {
 		Ctx:      ctx,
 		CacheURL: cacheURL,
 		HTTPPort: cfg.Port,
-		Address:  cfg.Address,
 	}
+	sh.Address = cfg.Address + "/"
 	return sh
 }

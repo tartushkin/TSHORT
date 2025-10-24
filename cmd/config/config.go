@@ -11,7 +11,7 @@ type Configure struct {
 func NewConfig() *Configure {
 	cfg := Configure{}
 	flag.StringVar(&cfg.Port, "a", ":8080", "порт сервиса")
-	flag.StringVar(&cfg.Address, "b", "http://localhost:8080/", "базовый адрес результирующего сокращённого URL")
+	flag.StringVar(&cfg.Address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
 	flag.Parse()
 	return &cfg
 }
