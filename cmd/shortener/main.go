@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/sirupsen/logrus"
-	cfg "github.com/tartushkin/TSHORT.git/cmd/config"
+	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
 	"github.com/tartushkin/TSHORT.git/internal/handler"
 	sr "github.com/tartushkin/TSHORT.git/internal/service"
 )

@@ -9,9 +9,6 @@ import (
 )
 
 func (h *Handlers) postURLHandler(ctx echo.Context) error {
-	if ctx.Request().Method != http.MethodPost {
-		return ctx.String(http.StatusMethodNotAllowed, "Не соответствует метод запроса")
-	}
 	// Получаем значение заголовка Content-Type
 	contentType := ctx.Request().Header.Get("Content-Type")
 
@@ -25,18 +22,15 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "Возникал ошибка при чтении тела запроса: "+err.Error())
 	}
 
-	aliaseURL := h.Short.SetAliaseName(string(body))
+	aliasURL := h.Short.SetAliasName(string(body))
 
-	shortURL := fmt.Sprintf("%s%s", h.Short.Address, aliaseURL)
+	shortURL := fmt.Sprintf("%s%s", h.Short.Address, aliasURL)
 
 	return ctx.String(http.StatusCreated, shortURL)
 
 }
 
 func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
-	if ctx.Request().Method != http.MethodGet {
-		return ctx.String(http.StatusMethodNotAllowed, "Не соответствует метод запроса")
-	}
 	// Получаем URL из параметров запроса
 	alias := ctx.Param("id")
 	if alias == "" {

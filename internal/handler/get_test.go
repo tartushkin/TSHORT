@@ -33,18 +33,6 @@ func TestGetHandler(t *testing.T) {
 	}
 	shortURL := rec.Body.String()
 
-	// 2. Проверяем не-GET запрос (должен вернуть 405)
-	req = httptest.NewRequest(http.MethodPost, "/:"+shortURL, nil)
-	rec = httptest.NewRecorder()
-	c = e.NewContext(req, rec)
-	c.SetParamNames("id")
-	c.SetParamValues(shortURL)
-
-	// Вызываем getHandler с неверным методом
-	if assert.NoError(t, handlers.getRedirectHandler(c)) {
-		assert.Equal(t, http.StatusMethodNotAllowed, rec.Code)
-	}
-
 	// 3. Создаём маршрут для GET-запроса
 	req = httptest.NewRequest(http.MethodGet, "/:"+shortURL, nil)
 	rec = httptest.NewRecorder()

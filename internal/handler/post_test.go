@@ -11,7 +11,6 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
-
 func TestPostHandler(t *testing.T) {
 	// Инициализация
 	short := &service.Short{
@@ -22,21 +21,11 @@ func TestPostHandler(t *testing.T) {
 	// Создаём экземпляр Echo
 	e := echo.New()
 
-	// 1. Не POST-запрос
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	// 2. Неправильный Content-Type
+	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString("https://example.com"))
+	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-
-	// Вызываем postHandler
-	if assert.NoError(t, handlers.postURLHandler(c)) {
-		assert.Equal(t, http.StatusMethodNotAllowed, rec.Code)
-	}
-
-	// 2. Неправильный Content-Type
-	req = httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString("https://example.com"))
-	req.Header.Set("Content-Type", "application/json")
-	rec = httptest.NewRecorder()
-	c = e.NewContext(req, rec)
 
 	// Вызываем postHandler
 	if assert.NoError(t, handlers.postURLHandler(c)) {
