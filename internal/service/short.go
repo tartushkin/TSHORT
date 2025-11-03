@@ -7,7 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 )
-//
+
 type Short struct {
 	Logger   *logrus.Logger
 	Ctx      context.Context
@@ -34,7 +34,7 @@ func (s *Short) SetAliaseName(url string) string {
 	return aliaseURL
 }
 
-// GetAliaseName - получение оригинального url
+//GetAliaseName - получение оригинального url
 func (s *Short) GetAliasName(aliaseURL string) (string, error) {
 	value, ok := s.CacheURL[aliaseURL]
 	if !ok {
