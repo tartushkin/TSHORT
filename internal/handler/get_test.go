@@ -28,7 +28,7 @@ func TestGetHandler(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем postHandler
-	if assert.NoError(t, handlers.postURLHandler(c)) {
+	if assert.NoError(t, handlers.oldPostURLHandler(c)) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
 	}
 	shortURL := rec.Body.String()

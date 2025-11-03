@@ -28,7 +28,7 @@ func TestPostHandler(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем postHandler
-	if assert.NoError(t, handlers.postURLHandler(c)) {
+	if assert.NoError(t, handlers.oldPostURLHandler(c)) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 
@@ -39,7 +39,7 @@ func TestPostHandler(t *testing.T) {
 	c = e.NewContext(req, rec)
 
 	// Вызываем postHandler
-	if assert.NoError(t, handlers.postURLHandler(c)) {
+	if assert.NoError(t, handlers.oldPostURLHandler(c)) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
 		assert.Equal(t, "text/plain; charset=UTF-8", rec.Header().Get("Content-Type"))
 
