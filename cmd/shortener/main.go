@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	httpPort = 8080
+	httpPort = ":8080"
 )
 
 func main() {

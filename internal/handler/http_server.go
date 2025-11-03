@@ -2,44 +2,32 @@ package handler
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
 type Handlers struct {
 	Short      *service.Short // внутриняя логика приложения
-	httpServer *http.Server
+	httpServer *echo.Echo
 }
 
 func NewHandlers(short *service.Short) *Handlers {
 	return &Handlers{Short: short}
 }
 
-// NewPersonHandlers создает новый экземпляр обработчиков запросов для Person
-func (h *Handlers) newRoutes() *mux.Router {
-	ht := mux.NewRouter()
+// StartHTTP - инициализация и запуск сервера
+func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
+	h.httpServer = echo.New()
+	h.httpServer.Use(middleware.Logger())
+	h.httpServer.Use(middleware.Recover())
 
-	ht.HandleFunc("/", h.postHandler).Methods("POST")
-	ht.HandleFunc("/{id}", h.getHandler).Methods("GET")
-	return ht
-}
+	h.httpServer.POST("/", h.postURLHandler)
+	h.httpServer.GET("/:id", h.getRedirectHandler)
 
-func (h *Handlers) StartHTTP(ctx context.Context, httpPort int) error {
-
-	h.httpServer = &http.Server{
-		Addr:    ":" + strconv.Itoa(httpPort),
-		Handler: h.newRoutes(),
-	}
-
-	err := h.httpServer.ListenAndServe()
-	if err != nil {
-		return fmt.Errorf("net.Listen: %s", err.Error())
-	}
+	h.httpServer.Logger.Fatal(h.httpServer.Start(httpPort))
 
 	return nil
 }
