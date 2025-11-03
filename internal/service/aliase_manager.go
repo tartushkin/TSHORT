@@ -5,19 +5,23 @@ import (
 	"fmt"
 )
 
-// SetAliaseName - формирование сокращенного url
-func (s *Short) SetAliaseName(url string) string {
-	aliaseURL := hex.EncodeToString([]byte(url))
-	aliaseURL = aliaseURL[:8]
-	s.CacheURL[aliaseURL] = url
-	return aliaseURL
+// SetAliasName - формирование сокращенного url
+func (s *Short) SetAliasName(url string) string {
+	aliasURL := hex.EncodeToString([]byte(url))
+	aliasURL = aliasURL[:8]
+	s.mu.RLock()
+	s.CacheURL[aliasURL] = url
+	s.mu.RUnlock()
+	return aliasURL
 }
 
-// GetAliaseName - получение оригинального url
-func (s *Short) GetAliasName(aliaseURL string) (string, error) {
-	value, ok := s.CacheURL[aliaseURL]
+// GetAliasName - получение оригинального url
+func (s *Short) GetAliasName(aliasURL string) (string, error) {
+	s.mu.RLock()
+	value, ok := s.CacheURL[aliasURL]
+	s.mu.RUnlock()
 	if !ok {
-		return "", fmt.Errorf("не удалось найти оригинальный url по сокращенному: %s", aliaseURL)
+		return "", fmt.Errorf("не удалось найти оригинальный url по сокращенному: %s", aliasURL)
 	}
 	return value, nil
 }

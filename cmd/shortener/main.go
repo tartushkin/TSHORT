@@ -2,26 +2,24 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/sirupsen/logrus"
+	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
 	"github.com/tartushkin/TSHORT.git/internal/handler"
 	sr "github.com/tartushkin/TSHORT.git/internal/service"
-)
-
-const (
-	httpPort = ":8080"
 )
 
 func main() {
 	lg := logrus.New()
 
 	ctx := context.Background()
+	cfg := cfg.NewConfig()        // инициализация конфига
+	sh := sr.Create(ctx, lg, cfg) // инициализация сервиса
 
-	sh := sr.Create(ctx, lg)
 	h := handler.NewHandlers(sh)
-
-	go h.StartHTTP(ctx, httpPort)
-	lg.Info("Listner", "Запущен http слушатель на порту ", httpPort)
+	go h.StartHTTP(ctx, cfg.Port) // запуск сервера
+	lg.Info("Listner", fmt.Sprintf("Запущен http слушатель на порту %s", cfg.Port))
 
 	go func() {
 		<-ctx.Done()
