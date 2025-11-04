@@ -23,7 +23,13 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 	h.httpServer = echo.New()
 	h.httpServer.Use(middleware.Logger()) //в билиотеке уже есть middleware для логирования запрсов
 	h.httpServer.Use(middleware.Recover())
-	h.httpServer.Use(middleware.Gzip()) //в билиотеке уже есть middleware для сжатия
+	//h.httpServer.Use(middleware.Gzip()) //в билиотеке уже есть middleware для сжатия
+	h.httpServer.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Skipper: func(c echo.Context) bool {
+			// Не сжимать ответы с кодом перенаправления (3xx)
+			return c.Response().Status >= 300 && c.Response().Status < 400
+		},
+	}))
 
 	h.httpServer.POST("/", h.oldPostURLHandler)
 	h.httpServer.GET("/:id", h.getRedirectHandler)
