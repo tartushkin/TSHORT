@@ -26,9 +26,14 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 	//h.httpServer.Use(middleware.Gzip()) //в билиотеке уже есть middleware для сжатия
 	h.httpServer.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
-			// Не сжимать ответы с кодом перенаправления (3xx)
-			return c.Response().Status >= 300 && c.Response().Status < 400
+			// Пропускаем сжатие для маршрутов, которые могут вернуть перенаправление
+			if c.Path() == "/:id" {
+				return true
+			}
+			return false
 		},
+		Level:     5,
+		MinLength: 15,
 	}))
 
 	h.httpServer.POST("/", h.oldPostURLHandler)
