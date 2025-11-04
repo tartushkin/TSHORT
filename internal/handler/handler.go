@@ -24,7 +24,10 @@ func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "Возникал ошибка при чтении тела запроса: "+err.Error())
 	}
 
-	aliasURL := h.Short.SetAliasName(string(body))
+	aliasURL, err := h.Short.SetAliasName(string(body))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
 
 	shortURL := fmt.Sprintf("%s%s", h.Short.Address, aliasURL)
 
@@ -70,7 +73,11 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, res)
 	}
 
-	aliasURL := h.Short.SetAliasName(string(req.URL))
+	aliasURL, err := h.Short.SetAliasName(string(req.URL))
+	if err != nil {
+		res.ErrMsg = err.Error()
+		return ctx.JSON(http.StatusInternalServerError, res)
+	}
 	shortURL := fmt.Sprintf("%s%s", h.Short.Address, aliasURL)
 	res.Result = shortURL
 

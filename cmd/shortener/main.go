@@ -14,8 +14,11 @@ func main() {
 	lg := logrus.New()
 
 	ctx := context.Background()
-	cfg := cfg.NewConfig()        // инициализация конфига
-	sh := sr.Create(ctx, lg, cfg) // инициализация сервиса
+	cfg := cfg.NewConfig()             // инициализация конфига
+	sh, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
+	if err != nil {
+		panic(err)
+	}
 
 	h := handler.NewHandlers(sh)
 	go h.StartHTTP(ctx, cfg.Port) // запуск сервера
