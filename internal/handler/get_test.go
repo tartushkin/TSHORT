@@ -2,30 +2,31 @@ package handler
 
 import (
 	"bytes"
-	"context"
+	"flag"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
-	config "github.com/tartushkin/TSHORT.git/internal/config/app"
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
+var configPath string
+
 func TestGetHandler(t *testing.T) {
 	// Инициализация
-
-	ctx := context.Background()
-	cfg := config.NewConfig()
-	lg := logrus.New()
-	short, err := service.Create(ctx, lg, cfg)
-	if err != nil {
-		t.Fatalf("Ошибка инициализации сервиса: %v", err)
+	flag.StringVar(&configPath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
+	short := &service.Short{
+		CacheURL: make(map[string]string),
 	}
+	short.PathStorage = configPath
 	handlers := &Handlers{Short: short}
-
+	file, err := short.NewFile()
+	if err != nil {
+		t.Fatalf("Ошибка при формировании файла: %v", err)
+	}
+	short.File = file
 	// Создаём экземпляр Echo
 	e := echo.New()
 
@@ -50,7 +51,7 @@ func TestGetHandler(t *testing.T) {
 	}
 
 	// 2. Создаём маршрут для GET-запроса
-	req = httptest.NewRequest(http.MethodGet, shortURL, nil)
+	req = httptest.NewRequest(http.MethodGet, "/:shortURL", nil)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 	c.SetParamNames("id")

@@ -2,28 +2,28 @@ package handler
 
 import (
 	"bytes"
-	"context"
+	"flag"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	config "github.com/tartushkin/TSHORT.git/internal/config/app"
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
 func TestPostHandler(t *testing.T) {
-	// Инициализация
-	ctx := context.Background()
-	cfg := config.NewConfig()
-	lg := logrus.New()
-	short, err := service.Create(ctx, lg, cfg)
-	if err != nil {
-		t.Fatalf("Ошибка инициализации сервиса: %v", err)
+	flag.StringVar(&configPath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
+	short := &service.Short{
+		CacheURL: make(map[string]string),
 	}
+	short.PathStorage = configPath
 	handlers := &Handlers{Short: short}
+	file, err := short.NewFile()
+	if err != nil {
+		t.Fatalf("Ошибка при формировании файла: %v", err)
+	}
+	short.File = file
 
 	// Создаём экземпляр Echo
 	e := echo.New()
