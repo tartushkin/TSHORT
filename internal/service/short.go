@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"sync"
 
@@ -40,17 +41,52 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		return nil, err
 	}
 	sh.File = file
+	sh.LoadStorageURL()
 	return sh, nil
 }
 
+// NewFile - создание файла для хранения пар URL
 func (s *Short) NewFile() (*model.FileStorage, error) {
-	file, err := os.OpenFile(s.PathStorage, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	file, err := os.OpenFile(s.PathStorage, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return nil, err
 	}
 
 	return &model.FileStorage{
-		File:    file,
+		SURL:    file,
 		Encoder: json.NewEncoder(file),
 	}, nil
+}
+
+// Close - закрытие файла
+func (s *Short) Close() {
+	if s.File != nil {
+		s.File.SURL.Close()
+		s.Logger.Info("main: ", fmt.Sprintf("file - %s, успешно закрыт", s.PathStorage))
+	}
+	s.Logger.Info("main: file - для закрытия отсутствует")
+}
+
+// LoadStorageURL - подгрузка в кеш из файла
+func (s *Short) LoadStorageURL() error {
+	_, err := s.File.SURL.Seek(0, 0)
+	if err != nil {
+		s.Logger.Error("Ошибка перемещения указателя файла: ", err)
+		return err
+	}
+
+	decoder := json.NewDecoder(s.File.SURL)
+	var line model.StorageURL
+	for decoder.More() {
+		err := decoder.Decode(&line)
+		if err != nil {
+			s.Logger.Error("Ошибка декодирования JSON: ", err)
+			return err
+		}
+		s.CacheURL[line.Alias] = line.Original
+		s.Logger.Info(fmt.Sprintf("Прочитано и подгружено в кеш пара из файла: key:%v, value:%v", line.Alias, line.Original))
+	}
+
+	return nil
+
 }

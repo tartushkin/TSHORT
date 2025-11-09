@@ -14,7 +14,7 @@ type PostURLHandlerResponse struct {
 }
 
 type FileStorage struct {
-	File    *os.File
+	SURL    *os.File
 	Encoder *json.Encoder
 }
 

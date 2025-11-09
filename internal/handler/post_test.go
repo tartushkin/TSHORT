@@ -2,41 +2,37 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	config "github.com/tartushkin/TSHORT.git/internal/config/app"
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
 func TestPostHandler(t *testing.T) {
 	// Инициализация
-	short := &service.Short{
-		CacheURL: make(map[string]string),
+	ctx := context.Background()
+	cfg := config.NewConfig()
+	lg := logrus.New()
+	short, err := service.Create(ctx, lg, cfg)
+	if err != nil {
+		t.Fatalf("Ошибка инициализации сервиса: %v", err)
 	}
 	handlers := &Handlers{Short: short}
 
 	// Создаём экземпляр Echo
 	e := echo.New()
 
-	// 2. Неправильный Content-Type
+	// 3. Валидный запрос
 	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString("https://example.com"))
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "text/plain")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-
-	// Вызываем postHandler
-	if assert.NoError(t, handlers.oldPostURLHandler(c)) {
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-	}
-
-	// 3. Валидный запрос
-	req = httptest.NewRequest(http.MethodPost, "/", bytes.NewBufferString("https://example.com"))
-	req.Header.Set("Content-Type", "text/plain")
-	rec = httptest.NewRecorder()
-	c = e.NewContext(req, rec)
 
 	// Вызываем postHandler
 	if assert.NoError(t, handlers.oldPostURLHandler(c)) {

@@ -19,10 +19,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer sh.Close()
 
 	h := handler.NewHandlers(sh)
 	go h.StartHTTP(ctx, cfg.Port) // запуск сервера
-	lg.Info("Listner", fmt.Sprintf("Запущен http слушатель на порту %s", cfg.Port))
+	lg.Info("Listner: ", fmt.Sprintf("Запущен http слушатель на порту %s", cfg.Port))
 
 	go func() {
 		<-ctx.Done()

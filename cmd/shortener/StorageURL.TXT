@@ -1,2 +1,2 @@
-{"short_url":"68747470","original_url":"https://practicum.yandex.ru/"}
-{"short_url":"68747470","original_url":"https://practicum.yandex.ru/"}
+{"short_url":"948cd9ad","original_url":"https://practicum.yandex.ru/"}
+{"short_url":"ebd6287a","original_url":"https://yandex.ru/search/?text=царство+небесное\u0026clid=2270455\u0026banerid=0458004939%3A10877728972609421311%3A68f90c7d071daa92e08a40c1\u0026win=721\u0026lr=11"}
