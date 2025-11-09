@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"flag"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +12,6 @@ import (
 )
 
 func TestPostHandler(t *testing.T) {
-	flag.StringVar(&configPath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
 	short := &service.Short{
 		CacheURL: make(map[string]string),
 	}
