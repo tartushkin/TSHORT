@@ -19,19 +19,6 @@ func NewConfig() *Config {
 	flag.StringVar(&cfg.StorageURL, "c", "./StorageURL.TXT", "путь для файла хранения URL")
 	flag.Parse()
 
-	//runAddr := os.Getenv("SERVER_ADDRESS")
-	//if runAddr != "" {
-	//	cfg.Port = runAddr
-	//}
-	//baseURL := os.Getenv("BASE_URL")
-	//if cfg.Address != "" {
-	//	cfg.Address = baseURL
-	//}
-	//storageURL := os.Getenv("FILE_STORAGE_PATH")
-	//if storageURL != "" {
-	//	cfg.StorageURL = storageURL
-	//}
-
 	if runAddr, exists := os.LookupEnv("SERVER_ADDRESS"); exists && runAddr != "" {
 		cfg.Port = runAddr
 	}

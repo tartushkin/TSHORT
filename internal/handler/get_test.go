@@ -13,14 +13,20 @@ import (
 )
 
 var configPath string
+var port string
+var address string
 
 func TestGetHandler(t *testing.T) {
 	// Инициализация
+	//flag.StringVar(&port, "a", ":8080", "порт сервиса")
+	//flag.StringVar(&address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&configPath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
 	short := &service.Short{
 		CacheURL: make(map[string]string),
 	}
 	short.PathStorage = configPath
+	//short.Address = address
+	//short.HTTPPort = port
 	handlers := &Handlers{Short: short}
 	file, err := short.NewFile()
 	if err != nil {

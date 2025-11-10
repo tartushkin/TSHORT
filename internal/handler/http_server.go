@@ -27,10 +27,7 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 	h.httpServer.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
 			// Пропускаем сжатие для маршрутов, которые могут вернуть перенаправление
-			if c.Path() == "/:id" {
-				return true
-			}
-			return false
+			return c.Path() != "/" && c.Path() != "/api/shorten"
 		},
 		Level:     5,
 		MinLength: 15,
