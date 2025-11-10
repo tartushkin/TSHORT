@@ -36,9 +36,15 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusNotFound, "URL не найден")
 	}
+	h.Short.Logger.Info("HTTP.Response - возвращаем полный URL - " + originalURL)
+	res := ctx.Redirect(http.StatusTemporaryRedirect, originalURL)
 
-	// Возвращаем редирект
-	return ctx.Redirect(http.StatusTemporaryRedirect, originalURL)
+	for key, values := range ctx.Response().Header() {
+		for _, value := range values {
+			h.Short.Logger.Info("HTTP.headers - " + key + ":" + value)
+		}
+	}
+	return res
 }
 
 func (h *Handlers) postURLHandler(ctx echo.Context) error {
