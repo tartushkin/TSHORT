@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -26,8 +27,8 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 	//h.httpServer.Use(middleware.Gzip()) //в билиотеке уже есть middleware для сжатия
 	h.httpServer.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
-			// Пропускаем сжатие для маршрутов, которые могут вернуть перенаправление
-			return c.Path() != "/" && c.Path() != "/api/shorten"
+			contentType := c.Request().Header.Get(echo.HeaderContentType)
+			return len(contentType) > 0 && strings.HasPrefix(contentType, "text/")
 		},
 		Level:     5,
 		MinLength: 15,

@@ -9,3 +9,5 @@
 {"short_url":"47231fbe","original_url":"https://example.com"}
 {"short_url":"db98b15a","original_url":"https://example.com"}
 {"short_url":"d9eb9d0d","original_url":"https://example.com"}
+{"short_url":"541c10c8","original_url":"https://example.com"}
+{"short_url":"d6d7be7a","original_url":"https://example.com"}
