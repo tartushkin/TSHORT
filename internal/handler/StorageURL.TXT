@@ -13,3 +13,5 @@
 {"short_url":"d6d7be7a","original_url":"https://example.com"}
 {"short_url":"540074db","original_url":"https://example.com"}
 {"short_url":"38007b77","original_url":"https://example.com"}
+{"short_url":"51c96c10","original_url":"https://example.com"}
+{"short_url":"91027062","original_url":"https://example.com"}
