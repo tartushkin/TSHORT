@@ -6,3 +6,6 @@
 {"short_url":"289c4197","original_url":"https://example.com"}
 {"short_url":"f7674713","original_url":"https://example.com"}
 {"short_url":"65fb9b01","original_url":"https://example.com"}
+{"short_url":"47231fbe","original_url":"https://example.com"}
+{"short_url":"db98b15a","original_url":"https://example.com"}
+{"short_url":"d9eb9d0d","original_url":"https://example.com"}

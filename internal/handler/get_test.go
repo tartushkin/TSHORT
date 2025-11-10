@@ -9,12 +9,11 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
 var configPath string
-var port string
-var address string
 
 func TestGetHandler(t *testing.T) {
 	// Инициализация
@@ -23,6 +22,7 @@ func TestGetHandler(t *testing.T) {
 	flag.StringVar(&configPath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
 	short := &service.Short{
 		CacheURL: make(map[string]string),
+		Logger:   logrus.New(),
 	}
 	short.PathStorage = configPath
 	//short.Address = address
