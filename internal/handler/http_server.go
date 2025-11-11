@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -16,9 +17,14 @@ type Handlers struct {
 	Short      *service.Short // внутриняя логика приложения
 	httpServer *echo.Echo
 }
-type gzipResponseWriter struct {
-	io.Writer
-	http.ResponseWriter
+
+type compressWriter struct {
+	w  http.ResponseWriter
+	zw *gzip.Writer
+}
+type compressReader struct {
+	r  io.ReadCloser
+	zr *gzip.Reader
 }
 
 func NewHandlers(short *service.Short) *Handlers {
@@ -48,37 +54,84 @@ func (h *Handlers) StopHTTP(ctx context.Context) {
 
 func GzipMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// проверяем что это не редирект
-		if c.Response().Status == http.StatusTemporaryRedirect ||
-			c.Response().Status == http.StatusPermanentRedirect {
-			return next(c)
+		// Проверяем, что клиент поддерживает сжатие ответа
+		acceptEncoding := c.Request().Header.Get(echo.HeaderAcceptEncoding)
+		supportsGzip := strings.Contains(acceptEncoding, "gzip")
+
+		// Проверяем, что клиент отправил сжатые данные
+		contentEncoding := c.Request().Header.Get(echo.HeaderContentEncoding)
+		sendsGzip := strings.Contains(contentEncoding, "gzip")
+
+		// Если клиент отправил сжатые данные, оборачиваем тело запроса
+		if sendsGzip {
+			cr, err := newCompressReader(c.Request().Body)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+			c.Request().Body = cr
+			defer cr.Close()
 		}
 
-		gz, err := gzip.NewWriterLevel(c.Response().Writer, gzip.BestSpeed)
-		if err != nil {
-			return err
+		// Если клиент поддерживает сжатие ответа, оборачиваем ResponseWriter
+		if supportsGzip {
+			res := c.Response()
+			cw := newCompressWriter(res.Writer)
+			res.Writer = cw
+			defer cw.Close()
+			res.Header().Set(echo.HeaderContentEncoding, "gzip")
 		}
-		defer gz.Close()
 
-		// обёртываем оригинальный ResponseWriter
-		gzw := gzipResponseWriter{Writer: gz, ResponseWriter: c.Response().Writer}
-
-		// Заменяем ResponseWriter в контексте Echo
-		c.Response().Writer = gzw
-		c.Response().Header().Set(echo.HeaderContentEncoding, "gzip")
-
+		// Передаём управление следующему обработчику
 		return next(c)
 	}
 }
 
-func (w gzipResponseWriter) WriteHeader(status int) {
-	w.ResponseWriter.WriteHeader(status)
+func newCompressWriter(w http.ResponseWriter) *compressWriter {
+	return &compressWriter{
+		w:  w,
+		zw: gzip.NewWriter(w),
+	}
 }
 
-func (w gzipResponseWriter) Write(b []byte) (int, error) {
-	return w.Writer.Write(b)
+func (c *compressWriter) Header() http.Header {
+	return c.w.Header()
 }
 
-func (w gzipResponseWriter) Header() http.Header {
-	return w.ResponseWriter.Header()
+func (c *compressWriter) Write(p []byte) (int, error) {
+	return c.zw.Write(p)
+}
+
+func (c *compressWriter) WriteHeader(statusCode int) {
+	if statusCode < 300 {
+		c.w.Header().Set("Content-Encoding", "gzip")
+	}
+	c.w.WriteHeader(statusCode)
+}
+
+// Close закрывает gzip.Writer и досылает все данные из буфера.
+func (c *compressWriter) Close() error {
+	return c.zw.Close()
+}
+
+func newCompressReader(r io.ReadCloser) (*compressReader, error) {
+	zr, err := gzip.NewReader(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return &compressReader{
+		r:  r,
+		zr: zr,
+	}, nil
+}
+
+func (c compressReader) Read(p []byte) (n int, err error) {
+	return c.zr.Read(p)
+}
+
+func (c *compressReader) Close() error {
+	if err := c.r.Close(); err != nil {
+		return err
+	}
+	return c.zr.Close()
 }
