@@ -14,12 +14,16 @@ func main() {
 	lg := logrus.New()
 
 	ctx := context.Background()
-	cfg := cfg.NewConfig()        // инициализация конфига
-	sh := sr.Create(ctx, lg, cfg) // инициализация сервиса
+	cfg := cfg.NewConfig()             // инициализация конфига
+	sh, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
+	if err != nil {
+		panic(err)
+	}
+	defer sh.Close()
 
 	h := handler.NewHandlers(sh)
 	go h.StartHTTP(ctx, cfg.Port) // запуск сервера
-	lg.Info("Listner", fmt.Sprintf("Запущен http слушатель на порту %s", cfg.Port))
+	lg.Info("Listner: ", fmt.Sprintf("Запущен http слушатель на порту %s", cfg.Port))
 
 	go func() {
 		<-ctx.Done()

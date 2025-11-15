@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -19,15 +16,10 @@ func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: text/plain")
 	}
 
-	body, err := io.ReadAll(ctx.Request().Body)
+	shortURL, err := h.Short.ReaderBody(ctx, false)
 	if err != nil {
-		return ctx.String(http.StatusBadRequest, "Возникал ошибка при чтении тела запроса: "+err.Error())
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-
-	aliasURL := h.Short.SetAliasName(string(body))
-
-	shortURL := fmt.Sprintf("%s%s", h.Short.Address, aliasURL)
-
 	return ctx.String(http.StatusCreated, shortURL)
 
 }
@@ -38,14 +30,21 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 	if alias == "" {
 		return ctx.String(http.StatusBadRequest, "Требуется алиас")
 	}
+
 	// Извлекаем алиас
 	originalURL, err := h.Short.GetAliasName(alias)
 	if err != nil {
 		return ctx.String(http.StatusNotFound, "URL не найден")
 	}
+	h.Short.Logger.Info("HTTP.Response - возвращаем полный URL по алиасу: " + alias + "/" + originalURL)
+	res := ctx.Redirect(http.StatusTemporaryRedirect, originalURL)
 
-	// Возвращаем редирект
-	return ctx.Redirect(http.StatusTemporaryRedirect, originalURL)
+	for key, values := range ctx.Response().Header() {
+		for _, value := range values {
+			h.Short.Logger.Info("HTTP.headers - " + key + ":" + value)
+		}
+	}
+	return res
 }
 
 func (h *Handlers) postURLHandler(ctx echo.Context) error {
@@ -57,21 +56,14 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 	if contentType != "application/json" {
 		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
 	}
-	body, err := io.ReadAll(ctx.Request().Body)
-	if err != nil {
-		return ctx.String(http.StatusBadRequest, "Возникал ошибка при чтении тела запроса: "+err.Error())
-	}
+
 	defer ctx.Request().Body.Close()
 	res := model.PostURLHandlerResponse{}
-	req := model.PostURLHandlerRequest{}
-	err = json.Unmarshal(body, &req)
+	shortURL, err := h.Short.ReaderBody(ctx, true)
 	if err != nil {
-		res.ErrMsg = "Возникал ошибка при чтении тела запроса: " + err.Error()
-		return ctx.JSON(http.StatusBadRequest, res)
+		res.ErrMsg = err.Error()
+		return ctx.JSON(http.StatusInternalServerError, res)
 	}
-
-	aliasURL := h.Short.SetAliasName(string(req.URL))
-	shortURL := fmt.Sprintf("%s%s", h.Short.Address, aliasURL)
 	res.Result = shortURL
 
 	return ctx.JSON(http.StatusCreated, res)

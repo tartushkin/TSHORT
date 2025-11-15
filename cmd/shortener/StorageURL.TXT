@@ -1,0 +1,2 @@
+{"short_url":"3e35b452","original_url":"https://go.dev/dl/"}
+{"short_url":"af3b84e1","original_url":"https://practicum.yandex.ru/"}
