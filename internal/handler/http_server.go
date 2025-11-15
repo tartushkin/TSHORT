@@ -21,8 +21,20 @@ func NewHandlers(short *service.Short) *Handlers {
 // StartHTTP - инициализация и запуск сервера
 func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 	h.httpServer = echo.New()
-	h.httpServer.Use(middleware.Logger()) //в билиотеке уже есть middleware
+	h.httpServer.Use(middleware.Logger()) //в билиотеке уже есть middleware для логирования запрсов
 	h.httpServer.Use(middleware.Recover())
+	//h.httpServer.Use(middleware.Gzip()) //в билиотеке уже есть middleware для сжатия
+	h.httpServer.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Skipper: func(c echo.Context) bool {
+			// Пропускаем сжатие для маршрутов, которые могут вернуть перенаправление
+			if c.Path() == "/:id" {
+				return true
+			}
+			return false
+		},
+		Level:     5,
+		MinLength: 15,
+	}))
 
 	h.httpServer.POST("/", h.oldPostURLHandler)
 	h.httpServer.GET("/:id", h.getRedirectHandler)
