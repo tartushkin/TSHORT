@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/sirupsen/logrus"
 	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
 	"github.com/tartushkin/TSHORT.git/internal/handler"
@@ -28,6 +29,7 @@ func main() {
 	go func() {
 		<-ctx.Done()
 		h.StopHTTP(ctx)
+
 	}()
 	select {}
 }

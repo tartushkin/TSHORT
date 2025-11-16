@@ -41,6 +41,7 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 	h.httpServer.POST("/", h.oldPostURLHandler)
 	h.httpServer.GET("/:id", h.getRedirectHandler)
 	h.httpServer.POST("/api/shorten", h.postURLHandler)
+	h.httpServer.GET("/ping", h.testConnectionDB)
 
 	h.httpServer.Logger.Fatal(h.httpServer.Start(httpPort))
 
