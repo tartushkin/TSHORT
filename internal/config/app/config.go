@@ -33,7 +33,7 @@ func NewConfig() *Config {
 	if storageURL, exists := os.LookupEnv("FILE_STORAGE_PATH"); exists && storageURL != "" {
 		cfg.StorageURL = storageURL
 	}
-	if db, exists := os.LookupEnv("DATABASE_DSN"); exists && db != "" {
+	if db, exists := os.LookupEnv("DATABASE_DNS"); exists && db != "" {
 		cfg.DNS = db
 	}
 
