@@ -18,7 +18,7 @@ func NewConfig() *Config {
 	flag.StringVar(&cfg.Port, "a", ":8080", "порт сервиса")
 	flag.StringVar(&cfg.Address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&cfg.StorageURL, "c", "./StorageURL.TXT", "путь для файла хранения URL")
-	flag.StringVar(&cfg.DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=postgres sslmode=disable", "cтрока с адресом подключения к БД")
+	flag.StringVar(&cfg.DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
 
 	flag.Parse()
 

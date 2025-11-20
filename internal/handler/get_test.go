@@ -2,37 +2,72 @@ package handler
 
 import (
 	"bytes"
-	"flag"
+	"context"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/tartushkin/TSHORT.git/internal/service"
+	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
+	sr "github.com/tartushkin/TSHORT.git/internal/service"
 )
 
-var configPath string
+// var configPath, DNS string
+var TestHandlers *Handlers
+
+func TestMain(m *testing.M) {
+	lg := logrus.New()
+	ctx := context.Background()
+	cfg := cfg.NewConfig()
+
+	sh, err := sr.Create(ctx, lg, cfg)
+	if err != nil {
+		log.Fatalf("Ошибка создания сервиса: %v", err)
+	}
+	defer sh.Close()
+
+	TestHandlers = &Handlers{Short: sh}
+
+	// Запуск тестов
+	code := m.Run()
+
+	os.Exit(code)
+}
 
 func TestGetHandler(t *testing.T) {
 	// Инициализация
 	//flag.StringVar(&port, "a", ":8080", "порт сервиса")
 	//flag.StringVar(&address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
-	flag.StringVar(&configPath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
-	short := &service.Short{
-		CacheURL: make(map[string]string),
-		Logger:   logrus.New(),
-	}
-	short.PathStorage = configPath
+	//flag.StringVar(&configPath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
+	//flag.StringVar(&DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
+
+	//short := &service.Short{
+	//	CacheURL: make(map[string]string),
+	//	Logger:   logrus.New(),
+	//}
+	//short.PathStorage = configPath
+	//short.DNS = DNS
+	//short.Ctx
+	//lg := logrus.New()
+	//ctx := context.Background()
+	//cfg := cfg.NewConfig() // инициализация конфига
+	//conn, _ := db.NewConnection(DNS)
+	//sh, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
+	//if err != nil {
+	//	panic(err)
+	//}
 	//short.Address = address
 	//short.HTTPPort = port
-	handlers := &Handlers{Short: short}
-	file, err := short.NewFile()
+	//Testhandlers := &Handlers{Short: sh}
+	file, err := TestHandlers.Short.NewFile()
 	if err != nil {
 		t.Fatalf("Ошибка при формировании файла: %v", err)
 	}
-	short.File = file
+	TestHandlers.Short.File = file
 	// Создаём экземпляр Echo
 	e := echo.New()
 
@@ -43,7 +78,7 @@ func TestGetHandler(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем postHandler
-	err = handlers.oldPostURLHandler(c)
+	err = TestHandlers.oldPostURLHandler(c)
 	if err != nil {
 		t.Fatalf("Ошибка в postHandler: %v", err)
 	}
@@ -66,7 +101,7 @@ func TestGetHandler(t *testing.T) {
 	c.SetParamValues(alias)
 
 	// Вызываем getHandler
-	err = handlers.getRedirectHandler(c)
+	err = TestHandlers.getRedirectHandler(c)
 	if err != nil {
 		t.Fatalf("Ошибка в getHandler: %v", err)
 	}

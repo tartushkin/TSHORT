@@ -22,6 +22,7 @@ type Short struct {
 	Address     string
 	PathStorage string
 	File        *model.FileStorage
+	DNS         string
 	CacheURL    map[string]string
 	conn        *sql.DB
 	Repo        *repository.Repo
@@ -38,6 +39,7 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		CacheURL:    cacheURL,
 		HTTPPort:    cfg.Port,
 		PathStorage: cfg.StorageURL,
+		DNS:         cfg.DNS,
 	}
 
 	sh.Address = cfg.Address + "/"
@@ -46,16 +48,16 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		return nil, err
 	}
 	sh.File = file
-	sh.LoadStorageURL()
 
 	conn, err := db.NewConnection(cfg.DNS)
 	if err != nil {
 		panic(err)
 	}
 	lg.Info("db: успешно подключились к DB")
-
 	sh.conn = conn
 	sh.Repo = repository.NewRepository(sh.conn)
+
+	sh.LoadStorageURL() //подгрузка кеша
 	return sh, nil
 }
 
@@ -85,24 +87,37 @@ func (s *Short) Close() {
 	s.Logger.Info("main: file - для закрытия отсутствует")
 }
 
-// LoadStorageURL - подгрузка в кеш из файла
+// LoadStorageURL - подгрузка в кеш
 func (s *Short) LoadStorageURL() error {
 	_, err := s.File.SURL.Seek(0, 0)
 	if err != nil {
 		s.Logger.Error("Ошибка перемещения указателя файла: ", err)
 		return err
 	}
+	sourse := s.checkSourse()
 
-	decoder := json.NewDecoder(s.File.SURL)
-	var line model.StorageURL
-	for decoder.More() {
-		err := decoder.Decode(&line)
+	switch sourse {
+	case model.DATABASE:
+		list, err := s.Repo.GetURLList(s.Ctx)
 		if err != nil {
-			s.Logger.Error("Ошибка декодирования JSON: ", err)
 			return err
 		}
-		s.CacheURL[line.Alias] = line.Original
-		s.Logger.Info(fmt.Sprintf("Прочитано и подгружено в кеш пара из файла: key:%v, value:%v", line.Alias, line.Original))
+		for _, line := range list {
+			s.CacheURL[line.Alias] = line.Original
+			s.Logger.Info(fmt.Sprintf("Прочитано и подгружено из БД в кеш пара: key:%v, value:%v", line.Alias, line.Original))
+		}
+	case model.FILE:
+		decoder := json.NewDecoder(s.File.SURL)
+		var line model.StorageURL
+		for decoder.More() {
+			err := decoder.Decode(&line)
+			if err != nil {
+				s.Logger.Error("Ошибка декодирования JSON: ", err)
+				return err
+			}
+			s.CacheURL[line.Alias] = line.Original
+			s.Logger.Info(fmt.Sprintf("Прочитано и подгружено в кеш пара из файла: key:%v, value:%v", line.Alias, line.Original))
+		}
 	}
 
 	return nil

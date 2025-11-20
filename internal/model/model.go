@@ -5,6 +5,11 @@ import (
 	"os"
 )
 
+const (
+	DATABASE = "DB"
+	FILE     = "FILE"
+)
+
 type PostURLHandlerRequest struct {
 	URL string
 }
@@ -19,6 +24,6 @@ type FileStorage struct {
 }
 
 type StorageURL struct {
-	Alias    string `json:"short_url"`
-	Original string `json:"original_url"`
+	Alias    string
+	Original string
 }
