@@ -27,6 +27,9 @@ func (r *Repo) GetURLList(ctx context.Context) ([]model.StorageURL, error) {
 			return nil, err
 		}
 	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return nil, nil
 }
