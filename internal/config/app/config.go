@@ -16,7 +16,7 @@ type Config struct {
 func NewConfig() *Config {
 	cfg := Config{}
 	flag.StringVar(&cfg.Port, "a", ":8000", "порт сервиса")
-	flag.StringVar(&cfg.Address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
+	flag.StringVar(&cfg.Address, "b", "http://localhost:8000", "базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&cfg.StorageURL, "c", "./StorageURL.TXT", "путь для файла хранения URL")
 	flag.StringVar(&cfg.DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
 
