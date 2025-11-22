@@ -22,7 +22,7 @@ func TestPostHandler(t *testing.T) {
 	//t.Fatalf("Ошибка при формировании файла: %v", err)
 	//}
 	//short.File = file
-
+	h := testCreate()
 	// Создаём экземпляр Echo
 	e := echo.New()
 
@@ -33,7 +33,7 @@ func TestPostHandler(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем postHandler
-	if assert.NoError(t, TestHandlers.oldPostURLHandler(c)) {
+	if assert.NoError(t, h.oldPostURLHandler(c)) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
 		assert.Equal(t, "text/plain; charset=UTF-8", rec.Header().Get("Content-Type"))
 

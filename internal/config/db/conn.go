@@ -29,12 +29,6 @@ func NewConnection(ps string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	//проверкаа подключения
-	//ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	//defer cancel()
-	//if err = db.PingContext(ctx); err != nil {
-	//	panic(err)
-	//}
 
 	return db, nil
 }
