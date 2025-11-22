@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 	}
 	defer sh.Close()
 	TestHandlers = &Handlers{Short: sh}
-	go TestHandlers.StartHTTP(ctx, cfg.Port)
+	//go TestHandlers.StartHTTP(ctx, cfg.Port)
 
 	// Запуск тестов
 	code := m.Run()
