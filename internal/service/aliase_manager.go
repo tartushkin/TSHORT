@@ -9,10 +9,8 @@ import (
 
 // SetAliasName - формирование сокращенного url
 func (s *Short) SetAliasName(url string) (string, error) {
-	fmt.Println("1")
 	err := s.checkURL(url)
 	if err != nil {
-		fmt.Println("2")
 		return "", err
 	}
 	uuidURL := uuid.New()
@@ -31,13 +29,11 @@ func (s *Short) SetAliasName(url string) (string, error) {
 	case model.DATABASE:
 		err := s.Repo.InsertURL(s.Ctx, url, aliasURL)
 		if err != nil {
-			fmt.Println("3")
 			return "", fmt.Errorf("возникла ошибка: %w при записи в БД новую пару URL", err)
 		}
 	case model.FILE:
 		err = s.write(&newURL)
 		if err != nil {
-			fmt.Println("4")
 			return "", fmt.Errorf("возникла ошибка: %w при записи в файл новую пару URL", err)
 		}
 	}
@@ -69,7 +65,6 @@ func (s *Short) write(event *model.StorageURL) error {
 func (s *Short) checkURL(outURL string) error {
 	for k, v := range s.CacheURL {
 		if v == outURL {
-			fmt.Println("мы тутаы")
 			return fmt.Errorf("данный URL - %s уже есть в кеше приложения по ключу: %s", outURL, k)
 		}
 	}
