@@ -42,7 +42,7 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		DNS:         cfg.DNS,
 	}
 
-	sh.Address = cfg.Address //+ "/"
+	sh.Address = cfg.Address
 	file, err := sh.NewFile()
 	if err != nil {
 		return nil, err
@@ -57,7 +57,10 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 	sh.conn = conn
 	sh.Repo = repository.NewRepository(sh.conn)
 
-	sh.LoadStorageURL() //подгрузка кеша
+	err = sh.LoadStorageURL() //подгрузка кеша
+	if err != nil {
+		return nil, err
+	}
 	return sh, nil
 }
 

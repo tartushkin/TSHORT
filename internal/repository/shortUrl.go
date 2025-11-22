@@ -15,21 +15,23 @@ func (r *Repo) InsertURL(ctx context.Context, fullURL, alias string) error {
 	}
 	return nil
 }
-func (r *Repo) GetURLList(ctx context.Context) ([]model.StorageURL, error) {
+func (r *Repo) GetURLList(ctx context.Context) ([]*model.StorageURL, error) {
 	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full FROM t_short.t_list`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var list []model.StorageURL
+	list := []*model.StorageURL{}
 	for rows.Next() {
-		if err := rows.Scan(&list); err != nil {
+		url := &model.StorageURL{}
+		if err := rows.Scan(&url.Alias, &url.Original); err != nil {
 			return nil, err
 		}
+		list = append(list, url)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	return list, nil
 }
