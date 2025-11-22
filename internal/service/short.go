@@ -38,11 +38,11 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		Ctx:         ctx,
 		CacheURL:    cacheURL,
 		HTTPPort:    cfg.Port,
-		PathStorage: cfg.StorageURL,
+		PathStorage: cfg.FileStoragePath,
 		DNS:         cfg.DNS,
 	}
 
-	sh.Address = cfg.Address + "/"
+	sh.Address = cfg.Address //+ "/"
 	file, err := sh.NewFile()
 	if err != nil {
 		return nil, err
