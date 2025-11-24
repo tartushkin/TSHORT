@@ -11,6 +11,7 @@ const (
 	List     = "list"
 	One      = "one"
 	Text     = "text"
+	CONFLICT = "данный URL"
 )
 
 type PostURLHandlerRequest struct {
