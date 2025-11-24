@@ -27,11 +27,6 @@ type FileStorage struct {
 	Encoder *json.Encoder
 }
 
-//type StorageURL struct {
-//	Alias    string
-//	Original string
-//}
-
 type BranchRequest struct {
 	CorrID      string `json:"correlation_id"`
 	OriginalURL string `json:"original_url"`

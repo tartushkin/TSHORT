@@ -100,7 +100,6 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 	listURL, err := h.Short.ReaderBody(ctx, model.List)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		//return ctx.JSON(http.StatusInternalServerError, err.Error)
 	}
 
 	return ctx.JSON(http.StatusOK, listURL)
