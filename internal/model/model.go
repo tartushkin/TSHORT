@@ -33,7 +33,7 @@ type BranchRequest struct {
 }
 type BranchResponse struct {
 	CorrID   string `json:"correlation_id"`
-	ShortUrl string `json:"short_url"`
+	ShortURL string `json:"short_url"`
 }
 
 type AliasFullCore struct {

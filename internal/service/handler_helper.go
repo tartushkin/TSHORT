@@ -48,7 +48,7 @@ func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchRespons
 			return nil, err
 		}
 
-		responseList = append(responseList, &model.BranchResponse{ShortUrl: fullURL})
+		responseList = append(responseList, &model.BranchResponse{ShortURL: fullURL})
 		s.Logger.Info("ReaderBody.json - успешно отправили пару в хранилище, алиас: " + aliasURL)
 	case model.List:
 		coupleList := []*model.BranchRequest{}
@@ -75,7 +75,7 @@ func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchRespons
 				CorrID:      couple.CorrID,
 			}
 			list = append(list, &fix)
-			responseList = append(responseList, &model.BranchResponse{ShortUrl: fullURL, CorrID: couple.CorrID})
+			responseList = append(responseList, &model.BranchResponse{ShortURL: fullURL, CorrID: couple.CorrID})
 			s.Logger.Info(fmt.Sprintf("ReaderBody.jsonList - запись пары в список для отправки в хранилище: %s/%s/%s ",
 				aliasURL, couple.OriginalURL, couple.CorrID))
 		}
@@ -106,7 +106,7 @@ func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchRespons
 			errMsg := fmt.Errorf("возникла ошибка при записи URL в хранилище: %w", err)
 			return nil, errMsg
 		}
-		responseList = append(responseList, &model.BranchResponse{ShortUrl: fullURL})
+		responseList = append(responseList, &model.BranchResponse{ShortURL: fullURL})
 		s.Logger.Info("ReaderBody.text - успешно отправили URL в хранилище.")
 	}
 
