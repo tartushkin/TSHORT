@@ -8,6 +8,9 @@ import (
 const (
 	DATABASE = "DB"
 	FILE     = "FILE"
+	List     = "list"
+	One      = "one"
+	Text     = "text"
 )
 
 type PostURLHandlerRequest struct {
@@ -23,7 +26,22 @@ type FileStorage struct {
 	Encoder *json.Encoder
 }
 
-type StorageURL struct {
-	Alias    string
-	Original string
+//type StorageURL struct {
+//	Alias    string
+//	Original string
+//}
+
+type BranchRequest struct {
+	CorrID      string `json:"correlation_id"`
+	OriginalURL string `json:"original_url"`
+}
+type BranchResponse struct {
+	CorrID   string `json:"correlation_id"`
+	ShortUrl string `json:"short_url"`
+}
+
+type AliasFullCore struct {
+	Alias       string `json:"alias"`
+	OriginalURL string `json:"original_url"`
+	CorrID      string `json:"correlation_id"`
 }

@@ -10,7 +10,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
-	db "github.com/tartushkin/TSHORT.git/internal/config/db"
+	"github.com/tartushkin/TSHORT.git/internal/config/db"
 	"github.com/tartushkin/TSHORT.git/internal/model"
 	"github.com/tartushkin/TSHORT.git/internal/repository"
 )
@@ -23,7 +23,7 @@ type Short struct {
 	PathStorage string
 	File        *model.FileStorage
 	DNS         string
-	CacheURL    map[string]string
+	CacheURL    map[string]*model.AliasFullCore
 	conn        *sql.DB
 	Repo        *repository.Repo
 	mu          sync.RWMutex
@@ -31,7 +31,7 @@ type Short struct {
 
 // NewShort - заполнение структуры приложения
 func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, error) {
-	cacheURL := map[string]string{}
+	cacheURL := map[string]*model.AliasFullCore{}
 
 	sh := &Short{
 		Logger:      lg,
@@ -48,15 +48,15 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		return nil, err
 	}
 	sh.File = file
-
-	conn, err := db.NewConnection(cfg.DNS)
-	if err != nil {
-		panic(err)
+	if cfg.DNS != "" {
+		conn, err := db.NewConnection(cfg.DNS)
+		if err != nil {
+			panic(err)
+		}
+		lg.Info("db: успешно подключились к DB")
+		sh.conn = conn
+		sh.Repo = repository.NewRepository(sh.conn)
 	}
-	lg.Info("db: успешно подключились к DB")
-	sh.conn = conn
-	sh.Repo = repository.NewRepository(sh.conn)
-
 	err = sh.LoadStorageURL() //подгрузка кеша
 	if err != nil {
 		return nil, err
@@ -106,20 +106,20 @@ func (s *Short) LoadStorageURL() error {
 			return err
 		}
 		for _, line := range list {
-			s.CacheURL[line.Alias] = line.Original
-			s.Logger.Info(fmt.Sprintf("Прочитано и подгружено из БД в кеш пара: key:%v, value:%v", line.Alias, line.Original))
+			s.CacheURL[line.Alias] = line
+			s.Logger.Info(fmt.Sprintf("Прочитано и подгружено из БД в кеш пара: key:%v, value:%v", line.Alias, line.OriginalURL))
 		}
 	case model.FILE:
 		decoder := json.NewDecoder(s.File.SURL)
-		var line model.StorageURL
+		var line model.AliasFullCore
 		for decoder.More() {
 			err := decoder.Decode(&line)
 			if err != nil {
 				s.Logger.Error("Ошибка декодирования JSON: ", err)
 				return err
 			}
-			s.CacheURL[line.Alias] = line.Original
-			s.Logger.Info(fmt.Sprintf("Прочитано и подгружено в кеш пара из файла: key:%v, value:%v", line.Alias, line.Original))
+			s.CacheURL[line.Alias] = &line
+			s.Logger.Info(fmt.Sprintf("Прочитано и подгружено в кеш пара из файла: aliasKey:%v, originalUrl:%v, corrID:%v", line.Alias, line.OriginalURL, line.CorrID))
 		}
 	}
 

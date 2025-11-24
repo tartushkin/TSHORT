@@ -14,12 +14,13 @@ func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 	if contentType != "text/plain" {
 		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: text/plain")
 	}
-
-	shortURL, err := h.Short.ReaderBody(ctx, false)
-
+	var shortURL string
+	list, err := h.Short.ReaderBody(ctx, model.Text)
 	if err != nil {
-
 		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	for _, couple := range list {
+		shortURL = couple.ShortUrl
 	}
 
 	return ctx.String(http.StatusCreated, shortURL)
@@ -61,12 +62,14 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 
 	defer ctx.Request().Body.Close()
 	res := model.PostURLHandlerResponse{}
-	shortURL, err := h.Short.ReaderBody(ctx, true)
+	listURL, err := h.Short.ReaderBody(ctx, model.One)
 	if err != nil {
 		res.ErrMsg = err.Error()
 		return ctx.JSON(http.StatusInternalServerError, res)
 	}
-	res.Result = shortURL
+	for _, couple := range listURL {
+		res.Result = couple.ShortUrl
+	}
 
 	return ctx.JSON(http.StatusCreated, res)
 
@@ -78,4 +81,23 @@ func (h *Handlers) testConnectionDB(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return ctx.JSON(http.StatusOK, "")
+}
+
+func (h *Handlers) batchHandler(ctx echo.Context) error {
+	// Получаем значение заголовка Content-Type
+	contentType := ctx.Request().Header.Get("Content-Type")
+
+	// Проверяем, что Content-Type равен "text/plain"
+	if contentType != "application/json" {
+		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
+	}
+	defer ctx.Request().Body.Close()
+
+	listURL, err := h.Short.ReaderBody(ctx, model.List)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		//return ctx.JSON(http.StatusInternalServerError, err.Error)
+	}
+
+	return ctx.JSON(http.StatusOK, listURL)
 }

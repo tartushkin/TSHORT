@@ -7,24 +7,23 @@ import (
 )
 
 // вставка новых ссылок
-func (r *Repo) InsertURL(ctx context.Context, fullURL, alias string) error {
-
-	_, err := r.conn.ExecContext(ctx, `INSERT INTO t_short.t_list (s_alias, s_full) VALUES ($1, $2)`, alias, fullURL)
+func (r *Repo) InsertURL(ctx context.Context, list []byte) error {
+	_, err := r.conn.ExecContext(ctx, `SELECT t_short.insert_urls($1)`, list)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func (r *Repo) GetURLList(ctx context.Context) ([]*model.StorageURL, error) {
+func (r *Repo) GetURLList(ctx context.Context) ([]*model.AliasFullCore, error) {
 	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full FROM t_short.t_list`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	list := []*model.StorageURL{}
+	list := []*model.AliasFullCore{}
 	for rows.Next() {
-		url := &model.StorageURL{}
-		if err := rows.Scan(&url.Alias, &url.Original); err != nil {
+		url := &model.AliasFullCore{}
+		if err := rows.Scan(&url.Alias, &url.OriginalURL); err != nil {
 			return nil, err
 		}
 		list = append(list, url)
