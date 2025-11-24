@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/tartushkin/TSHORT.git/internal/model"
@@ -66,9 +65,9 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 	listURL, err := h.Short.ReaderBody(ctx, model.One)
 	if err != nil {
 		res.ErrMsg = err.Error()
-		if strings.HasPrefix(res.ErrMsg, model.CONFLICT) {
-			return ctx.JSON(http.StatusConflict, res)
-		}
+		//if strings.HasPrefix(res.ErrMsg, model.CONFLICT) {
+		//	return ctx.JSON(http.StatusConflict, res)
+		//}
 		return ctx.JSON(http.StatusInternalServerError, res)
 	}
 	for _, couple := range listURL {
