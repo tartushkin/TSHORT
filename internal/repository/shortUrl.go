@@ -2,18 +2,43 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/tartushkin/TSHORT.git/internal/model"
 )
 
+const (
+	errConf = "23505"
+)
+
 // вставка новых ссылок
-func (r *Repo) InsertURL(ctx context.Context, list []byte) error {
+func (r *Repo) InsertURLJson(ctx context.Context, list []byte) error {
 	_, err := r.conn.ExecContext(ctx, `SELECT t_short.insert_urls($1)`, list)
 	if err != nil {
 		return err
 	}
 	return nil
 }
+func (r *Repo) InsertURL(ctx context.Context, couple *model.AliasFullCore) error {
+	_, err := r.conn.ExecContext(ctx, `
+	INSERT INTO t_short.t_list(s_alias, s_full)
+	VALUES ($1,$2);
+	`, couple.Alias, couple.OriginalURL)
+	if err != nil {
+		// Проверяем, является ли ошибка ошибкой уникальности
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return fmt.Errorf("ERRCONFLICT")
+			}
+		}
+		return fmt.Errorf("ошибка при вставке URL: %w", err)
+	}
+	return nil
+}
+
 func (r *Repo) GetURLList(ctx context.Context) ([]*model.AliasFullCore, error) {
 	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full FROM t_short.t_list`)
 	if err != nil {
@@ -33,4 +58,13 @@ func (r *Repo) GetURLList(ctx context.Context) ([]*model.AliasFullCore, error) {
 	}
 
 	return list, nil
+}
+
+func (r *Repo) GetAlias(ctx context.Context, orig string) (string, error) {
+	var alias string
+	err := r.conn.QueryRowContext(ctx, `SELECT s_alias FROM t_short.t_list WHERE s_full = $1`, orig).Scan(&alias)
+	if err != nil {
+		return "", err
+	}
+	return alias, nil
 }

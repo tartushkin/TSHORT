@@ -6,12 +6,14 @@ import (
 )
 
 const (
-	DATABASE = "DB"
-	FILE     = "FILE"
-	List     = "list"
-	One      = "one"
-	Text     = "text"
-	CONFLICT = "данный URL"
+	DATABASE    = "DB"
+	FILE        = "FILE"
+	List        = "list"
+	One         = "one"
+	Text        = "text"
+	CONFLICT    = "данный URL"
+	ERRCONFLICT = "ERRCONFLICT"
+	JSON        = "json"
 )
 
 type PostURLHandlerRequest struct {
