@@ -1,3 +1,3 @@
-{"short_url":"3e35b452","original_url":"https://go.dev/dl/"}
-{"short_url":"af3b84e1","original_url":"https://practicum.yandex.ru/"}
-{"short_url":"552bea50","original_url":"https://go.dev/dl"}
+{"alias":"08c6c6b2","original_url":"https://nk.lordfilm17.ru/filmy/","correlation_id":""}
+{"alias":"e3390197","original_url":"https://nk.lordfilm17.ru","correlation_id":"1"}
+{"alias":"a66bc0ff","original_url":"https://yandex.ru/images/search","correlation_id":"2"}

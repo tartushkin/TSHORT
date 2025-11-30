@@ -12,13 +12,14 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/tartushkin/TSHORT.git/internal/config/db"
+	"github.com/tartushkin/TSHORT.git/internal/model"
 	"github.com/tartushkin/TSHORT.git/internal/repository"
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
 // var configPath, DNS string
 // var TestHandlers *Handlers
-// var configPath string
+var configPath string
 var DNS string
 
 //	func TestMain(m *testing.M) {
@@ -42,8 +43,11 @@ func testCreate() *Handlers {
 	if DNS == "" {
 		flag.StringVar(&DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
 	}
+	//if configPath == "" {
+	//	flag.StringVar(&configPath, "g", "./StorageURL.TXT", "путь для файла хранения URL")
+	//}
 	short := &service.Short{
-		CacheURL: make(map[string]string),
+		CacheURL: make(map[string]*model.AliasFullCore),
 		Logger:   logrus.New(),
 	}
 	//short.PathStorage = configPath
@@ -58,42 +62,15 @@ func testCreate() *Handlers {
 	short.Repo = repository.NewRepository(conn)
 
 	TestHandlers := &Handlers{Short: short}
-	//file, err := TestHandlers.Short.NewFile()
-	//if err != nil {
-	//	short.Logger.Fatalf("Ошибка при формировании файла: %v", err)
-	//}
-	//TestHandlers.Short.File = file
+	file, err := TestHandlers.Short.NewFile()
+	if err != nil {
+		short.Logger.Fatalf("Ошибка при формировании файла: %v", err)
+	}
+	TestHandlers.Short.File = file
 	return TestHandlers
 }
 func TestGetHandler(t *testing.T) {
-	// Инициализация
-	//flag.StringVar(&port, "a", ":8080", "порт сервиса")
-	//flag.StringVar(&address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
-	//flag.StringVar(&configPath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
-	//flag.StringVar(&DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
-	//
-	//short := &service.Short{
-	//	CacheURL: make(map[string]string),
-	//	Logger:   logrus.New(),
-	//}
-	////short.PathStorage = configPath
-	//short.DNS = DNS
-	//short.Ctx = context.Background()
-	//
-	//conn, err := db.NewConnection(short.DNS)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//short.Logger.Info("db: успешно подключились к DB")
-	//
-	//short.Repo = repository.NewRepository(conn)
-	//
-	//TestHandlers := &Handlers{Short: short}
-	//file, err := TestHandlers.Short.NewFile()
-	//if err != nil {
-	//	t.Fatalf("Ошибка при формировании файла: %v", err)
-	//}
-	//TestHandlers.Short.File = file
+
 	// Создаём экземпляр Echo
 	h := testCreate()
 	e := echo.New()

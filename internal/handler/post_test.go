@@ -11,17 +11,6 @@ import (
 )
 
 func TestPostHandler(t *testing.T) {
-	//short := &service.Short{
-	//	CacheURL: make(map[string]string),
-	//}
-	//short.PathStorage = configPath
-	//handlers := &Handlers{Short: short}
-
-	//file, err := short.NewFile()
-	//if err != nil {
-	//t.Fatalf("Ошибка при формировании файла: %v", err)
-	//}
-	//short.File = file
 	h := testCreate()
 	// Создаём экземпляр Echo
 	e := echo.New()
