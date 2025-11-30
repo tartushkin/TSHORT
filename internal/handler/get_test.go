@@ -17,40 +17,21 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
-// var configPath, DNS string
-// var TestHandlers *Handlers
 var configPath string
 var DNS string
 
-//	func TestMain(m *testing.M) {
-//		lg := logrus.New()
-//		ctx := context.Background()
-//		cfg := cfg.NewConfig()
-//
-//		sh, err := sr.Create(ctx, lg, cfg)
-//		if err != nil {
-//			log.Fatalf("Ошибка создания сервиса: %v", err)
-//		}
-//		defer sh.Close()
-//		TestHandlers = &Handlers{Short: sh}
-//
-//		// Запуск тестов
-//		code := m.Run()
-//
-//		os.Exit(code)
-//	}
 func testCreate() *Handlers {
 	if DNS == "" {
 		flag.StringVar(&DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
 	}
-	//if configPath == "" {
-	//	flag.StringVar(&configPath, "g", "./StorageURL.TXT", "путь для файла хранения URL")
-	//}
+	if configPath == "" {
+		flag.StringVar(&configPath, "g", "./StorageURL.TXT", "путь для файла хранения URL")
+	}
 	short := &service.Short{
 		CacheURL: make(map[string]*model.AliasFullCore),
 		Logger:   logrus.New(),
 	}
-	//short.PathStorage = configPath
+	short.PathStorage = configPath
 	short.DNS = DNS
 	short.Ctx = context.Background()
 	conn, err := db.NewConnection(short.DNS)

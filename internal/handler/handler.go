@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/tartushkin/TSHORT.git/internal/model"
@@ -20,7 +21,7 @@ func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	for _, couple := range list {
-		shortURL = couple.ShortUrl
+		shortURL = couple.ShortURL
 	}
 
 	return ctx.String(http.StatusCreated, shortURL)
@@ -65,13 +66,13 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 	listURL, err := h.Short.ReaderBody(ctx, model.One)
 	if err != nil {
 		res.ErrMsg = err.Error()
-		//if strings.HasPrefix(res.ErrMsg, model.CONFLICT) {
-		//	return ctx.JSON(http.StatusConflict, res)
-		//}
+		if strings.HasPrefix(res.ErrMsg, model.CONFLICT) {
+			return ctx.JSON(http.StatusConflict, res)
+		}
 		return ctx.JSON(http.StatusInternalServerError, res)
 	}
 	for _, couple := range listURL {
-		res.Result = couple.ShortUrl
+		res.Result = couple.ShortURL
 	}
 
 	return ctx.JSON(http.StatusCreated, res)
@@ -99,7 +100,6 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 	listURL, err := h.Short.ReaderBody(ctx, model.List)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		//return ctx.JSON(http.StatusInternalServerError, err.Error)
 	}
 
 	return ctx.JSON(http.StatusOK, listURL)

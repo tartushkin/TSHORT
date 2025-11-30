@@ -8,21 +8,13 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/model"
 )
 
-// SetAliasName - формирование сокращенного url
-func (s *Short) SetAliasName(coupe *model.AliasFullCore) (string, error) {
-	err := s.checkURL(coupe.OriginalURL)
-	if err != nil {
-		return "", err
-	}
-	uuidURL := uuid.New()
-	aliasURL := uuidURL.String()
-
-	aliasURL = aliasURL[:8]
-	coupe.Alias = aliasURL
+// SetCouple - добавление пары сокращенный/оригинальный url в кеш
+func (s *Short) SetCouple(coupe *model.AliasFullCore) (string, error) {
 	s.mu.RLock()
-	s.CacheURL[aliasURL] = coupe
+	s.CacheURL[coupe.Alias] = coupe
 	s.mu.RUnlock()
-	return aliasURL, nil
+	URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias)
+	return URL, nil
 }
 
 // GetAliasName - получение оригинального url
@@ -62,19 +54,34 @@ func (s *Short) checkSourse() string {
 	return model.FILE
 }
 
-func (s *Short) insertURL(listURL []*model.AliasFullCore) error {
+func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 	sourse := s.checkSourse()
 
 	switch sourse {
 	case model.DATABASE:
 		s.Logger.Info("insertURL - хранилище для данных: " + model.DATABASE)
-		list, err := json.Marshal(listURL)
-		if err != nil {
-			return err
-		}
-		err = s.Repo.InsertURL(s.Ctx, list)
-		if err != nil {
-			return fmt.Errorf("возникла ошибка: %w при записи в БД новую пару URL", err)
+		if req == model.Text || req == model.One {
+			couple := listURL[0]
+			err := s.Repo.InsertURL(s.Ctx, couple)
+			if err != nil {
+				if err.Error() == model.ERRCONFLICT {
+					alias, err := s.Repo.GetAlias(s.Ctx, couple.OriginalURL)
+					if err != nil {
+						return err
+					}
+					return fmt.Errorf("данный URL - %v уже есть в БД приложения по ключу: %v", couple.OriginalURL, alias)
+				}
+				return fmt.Errorf("возникла ошибка: %w при записи в БД новую пару URL", err)
+			}
+		} else {
+			list, err := json.Marshal(listURL)
+			if err != nil {
+				return err
+			}
+			err = s.Repo.InsertURLJson(s.Ctx, list)
+			if err != nil {
+				return fmt.Errorf("возникла ошибка: %w при записи в БД новую пару URL", err)
+			}
 		}
 	case model.FILE:
 		s.Logger.Info("insertURL - хранилище для данных: " + model.FILE)
@@ -88,4 +95,11 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore) error {
 
 	}
 	return nil
+}
+func (s *Short) getUUID() string {
+	uuidURL := uuid.New()
+	aliasURL := uuidURL.String()
+
+	aliasURL = aliasURL[:8]
+	return aliasURL
 }
