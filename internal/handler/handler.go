@@ -10,16 +10,18 @@ import (
 func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 	// Получаем значение заголовка Content-Type
 	contentType := ctx.Request().Header.Get("Content-Type")
-
 	// Проверяем, что Content-Type равен "text/plain"
 	if contentType != "text/plain" {
 		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: text/plain")
 	}
 
 	shortURL, err := h.Short.ReaderBody(ctx, false)
+
 	if err != nil {
+
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+
 	return ctx.String(http.StatusCreated, shortURL)
 
 }

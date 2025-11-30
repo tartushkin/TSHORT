@@ -31,6 +31,6 @@ func (s *Short) ReaderBody(ctx echo.Context, jn bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	URL := fmt.Sprintf("%s%s", s.Address, aliasURL)
+	URL := fmt.Sprintf("%s/%s", s.Address, aliasURL)
 	return URL, nil
 }

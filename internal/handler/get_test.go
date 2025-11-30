@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"net/http"
 	"net/http/httptest"
@@ -10,30 +11,91 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+	"github.com/tartushkin/TSHORT.git/internal/config/db"
+	"github.com/tartushkin/TSHORT.git/internal/repository"
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
-var configPath string
+// var configPath, DNS string
+// var TestHandlers *Handlers
+// var configPath string
+var DNS string
 
-func TestGetHandler(t *testing.T) {
-	// Инициализация
-	//flag.StringVar(&port, "a", ":8080", "порт сервиса")
-	//flag.StringVar(&address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
-	flag.StringVar(&configPath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
+//	func TestMain(m *testing.M) {
+//		lg := logrus.New()
+//		ctx := context.Background()
+//		cfg := cfg.NewConfig()
+//
+//		sh, err := sr.Create(ctx, lg, cfg)
+//		if err != nil {
+//			log.Fatalf("Ошибка создания сервиса: %v", err)
+//		}
+//		defer sh.Close()
+//		TestHandlers = &Handlers{Short: sh}
+//
+//		// Запуск тестов
+//		code := m.Run()
+//
+//		os.Exit(code)
+//	}
+func testCreate() *Handlers {
+	if DNS == "" {
+		flag.StringVar(&DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
+	}
 	short := &service.Short{
 		CacheURL: make(map[string]string),
 		Logger:   logrus.New(),
 	}
-	short.PathStorage = configPath
-	//short.Address = address
-	//short.HTTPPort = port
-	handlers := &Handlers{Short: short}
-	file, err := short.NewFile()
+	//short.PathStorage = configPath
+	short.DNS = DNS
+	short.Ctx = context.Background()
+	conn, err := db.NewConnection(short.DNS)
 	if err != nil {
-		t.Fatalf("Ошибка при формировании файла: %v", err)
+		panic(err)
 	}
-	short.File = file
+	short.Logger.Info("db: успешно подключились к DB")
+
+	short.Repo = repository.NewRepository(conn)
+
+	TestHandlers := &Handlers{Short: short}
+	//file, err := TestHandlers.Short.NewFile()
+	//if err != nil {
+	//	short.Logger.Fatalf("Ошибка при формировании файла: %v", err)
+	//}
+	//TestHandlers.Short.File = file
+	return TestHandlers
+}
+func TestGetHandler(t *testing.T) {
+	// Инициализация
+	//flag.StringVar(&port, "a", ":8080", "порт сервиса")
+	//flag.StringVar(&address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
+	//flag.StringVar(&configPath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
+	//flag.StringVar(&DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
+	//
+	//short := &service.Short{
+	//	CacheURL: make(map[string]string),
+	//	Logger:   logrus.New(),
+	//}
+	////short.PathStorage = configPath
+	//short.DNS = DNS
+	//short.Ctx = context.Background()
+	//
+	//conn, err := db.NewConnection(short.DNS)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//short.Logger.Info("db: успешно подключились к DB")
+	//
+	//short.Repo = repository.NewRepository(conn)
+	//
+	//TestHandlers := &Handlers{Short: short}
+	//file, err := TestHandlers.Short.NewFile()
+	//if err != nil {
+	//	t.Fatalf("Ошибка при формировании файла: %v", err)
+	//}
+	//TestHandlers.Short.File = file
 	// Создаём экземпляр Echo
+	h := testCreate()
 	e := echo.New()
 
 	// 1. Создаём сокращённый URL через postHandler
@@ -43,7 +105,7 @@ func TestGetHandler(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем postHandler
-	err = handlers.oldPostURLHandler(c)
+	err := h.oldPostURLHandler(c)
 	if err != nil {
 		t.Fatalf("Ошибка в postHandler: %v", err)
 	}
@@ -66,7 +128,7 @@ func TestGetHandler(t *testing.T) {
 	c.SetParamValues(alias)
 
 	// Вызываем getHandler
-	err = handlers.getRedirectHandler(c)
+	err = h.getRedirectHandler(c)
 	if err != nil {
 		t.Fatalf("Ошибка в getHandler: %v", err)
 	}

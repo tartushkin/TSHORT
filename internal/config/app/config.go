@@ -6,10 +6,10 @@ import (
 )
 
 type Config struct {
-	Port       string
-	Address    string
-	StorageURL string
-	DNS        string
+	Port            string
+	Address         string
+	FileStoragePath string
+	DNS             string
 }
 
 // NewConfig - создание конфигурации приложения
@@ -17,8 +17,8 @@ func NewConfig() *Config {
 	cfg := Config{}
 	flag.StringVar(&cfg.Port, "a", ":8080", "порт сервиса")
 	flag.StringVar(&cfg.Address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
-	flag.StringVar(&cfg.StorageURL, "c", "./StorageURL.TXT", "путь для файла хранения URL")
-	flag.StringVar(&cfg.DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=postgres sslmode=disable", "cтрока с адресом подключения к БД")
+	flag.StringVar(&cfg.FileStoragePath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
+	flag.StringVar(&cfg.DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
 
 	flag.Parse()
 
@@ -30,8 +30,8 @@ func NewConfig() *Config {
 		cfg.Address = baseURL
 	}
 
-	if storageURL, exists := os.LookupEnv("FILE_STORAGE_PATH"); exists && storageURL != "" {
-		cfg.StorageURL = storageURL
+	if fileStoragePath, exists := os.LookupEnv("FILE_STORAGE_PATH"); exists && fileStoragePath != "" {
+		cfg.FileStoragePath = fileStoragePath
 	}
 	if db, exists := os.LookupEnv("DATABASE_DNS"); exists && db != "" {
 		cfg.DNS = db

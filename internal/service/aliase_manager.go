@@ -24,10 +24,20 @@ func (s *Short) SetAliasName(url string) (string, error) {
 		Alias:    aliasURL,
 		Original: url,
 	}
-	err = s.write(&newURL)
-	if err != nil {
-		return "", fmt.Errorf("возникла ошибка: %w при записи в файл новую пару URL", err)
+	sourse := s.checkSourse()
+	switch sourse {
+	case model.DATABASE:
+		err := s.Repo.InsertURL(s.Ctx, url, aliasURL)
+		if err != nil {
+			return "", fmt.Errorf("возникла ошибка: %w при записи в БД новую пару URL", err)
+		}
+	case model.FILE:
+		err = s.write(&newURL)
+		if err != nil {
+			return "", fmt.Errorf("возникла ошибка: %w при записи в файл новую пару URL", err)
+		}
 	}
+
 	return aliasURL, nil
 }
 
@@ -51,6 +61,7 @@ func (s *Short) write(event *model.StorageURL) error {
 	return nil
 }
 
+// проверка наличия url в кеше
 func (s *Short) checkURL(outURL string) error {
 	for k, v := range s.CacheURL {
 		if v == outURL {
@@ -58,4 +69,11 @@ func (s *Short) checkURL(outURL string) error {
 		}
 	}
 	return nil
+}
+
+func (s *Short) checkSourse() string {
+	if s.DNS != "" {
+		return model.DATABASE
+	}
+	return model.FILE
 }
