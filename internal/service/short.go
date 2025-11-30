@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,7 +10,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
+	db "github.com/tartushkin/TSHORT.git/internal/config/db"
 	"github.com/tartushkin/TSHORT.git/internal/model"
+	"github.com/tartushkin/TSHORT.git/internal/repository"
 )
 
 type Short struct {
@@ -20,6 +23,8 @@ type Short struct {
 	PathStorage string
 	File        *model.FileStorage
 	CacheURL    map[string]string
+	conn        *sql.DB
+	Repo        *repository.Repo
 	mu          sync.RWMutex
 }
 
@@ -42,6 +47,15 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 	}
 	sh.File = file
 	sh.LoadStorageURL()
+
+	conn, err := db.NewConnection(cfg.DNS)
+	if err != nil {
+		panic(err)
+	}
+	lg.Info("db: успешно подключились к DB")
+
+	sh.conn = conn
+	sh.Repo = repository.NewRepository(sh.conn)
 	return sh, nil
 }
 
@@ -63,6 +77,10 @@ func (s *Short) Close() {
 	if s.File != nil {
 		s.File.SURL.Close()
 		s.Logger.Info("main: ", fmt.Sprintf("file - %s, успешно закрыт", s.PathStorage))
+	}
+	if s.conn != nil {
+		s.conn.Close()
+		s.Logger.Info("main: соединение с БД закрыто")
 	}
 	s.Logger.Info("main: file - для закрытия отсутствует")
 }

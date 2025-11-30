@@ -9,6 +9,7 @@ type Config struct {
 	Port       string
 	Address    string
 	StorageURL string
+	DNS        string
 }
 
 // NewConfig - создание конфигурации приложения
@@ -17,6 +18,8 @@ func NewConfig() *Config {
 	flag.StringVar(&cfg.Port, "a", ":8080", "порт сервиса")
 	flag.StringVar(&cfg.Address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&cfg.StorageURL, "c", "./StorageURL.TXT", "путь для файла хранения URL")
+	flag.StringVar(&cfg.DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=postgres sslmode=disable", "cтрока с адресом подключения к БД")
+
 	flag.Parse()
 
 	if runAddr, exists := os.LookupEnv("SERVER_ADDRESS"); exists && runAddr != "" {
@@ -30,5 +33,9 @@ func NewConfig() *Config {
 	if storageURL, exists := os.LookupEnv("FILE_STORAGE_PATH"); exists && storageURL != "" {
 		cfg.StorageURL = storageURL
 	}
+	if db, exists := os.LookupEnv("DATABASE_DNS"); exists && db != "" {
+		cfg.DNS = db
+	}
+
 	return &cfg
 }

@@ -69,3 +69,11 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 	return ctx.JSON(http.StatusCreated, res)
 
 }
+
+func (h *Handlers) testConnectionDB(ctx echo.Context) error {
+	err := h.Short.Repo.TestConnectionDB()
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return ctx.JSON(http.StatusOK, "")
+}
