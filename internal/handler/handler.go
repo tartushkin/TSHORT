@@ -91,7 +91,7 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 	// Получаем значение заголовка Content-Type
 	contentType := ctx.Request().Header.Get("Content-Type")
 
-	// Проверяем, что Content-Type равен "text/plain"
+	// Проверяем, что Content-Type равен "application/json"
 	if contentType != "application/json" {
 		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
 	}
@@ -103,4 +103,22 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, listURL)
+}
+
+func (h *Handlers) getMyShortURL(ctx echo.Context) error {
+	// Получаем значение заголовка Content-Type
+	contentType := ctx.Request().Header.Get("Content-Type")
+
+	// Проверяем, что Content-Type равен "application/json"
+	if contentType != "application/json" {
+		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
+	}
+	defer ctx.Request().Body.Close()
+
+	userID, err := h.Short.GetUserURL(ctx)
+	if err != nil {
+		return err
+	}
+	return ctx.JSON(http.StatusOK, userID)
+
 }

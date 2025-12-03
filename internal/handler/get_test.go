@@ -61,6 +61,13 @@ func TestGetHandler(t *testing.T) {
 	req.Header.Set("Content-Type", "text/plain")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
+	req.AddCookie(&http.Cookie{
+		Name:     "user_id",
+		Value:    "a7fa515e.fb64b57c209853ea0fb0fb0f2adb85aa6f1ef726d18c38c44d530036b5e7282f",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true, // Используйте true, если используете HTTPS
+	})
 
 	// Вызываем postHandler
 	err := h.oldPostURLHandler(c)

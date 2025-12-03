@@ -11,12 +11,13 @@ import (
 )
 
 func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchResponse, error) {
+
 	s.Logger.Info("ReaderBody.start - чтение тела запроса")
 	list, err := s.getBody(ctx, req) // получаем тело запроса
 	if err != nil {
+
 		return nil, err
 	}
-
 	for _, couple := range list {
 		err := s.checkURL(couple.OriginalURL) //сначала проверяем кеш, потом проверяем наличие в базе
 		if err != nil {
@@ -43,15 +44,22 @@ func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchRespons
 }
 
 func (s *Short) getBody(ctx echo.Context, req string) ([]*model.AliasFullCore, error) {
+
 	s.Logger.Info("ReaderBody.start - чтение тела запроса")
+	userID, err := s.GetUserID(ctx)
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+	}
+
 	body, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
-		return nil, ctx.String(http.StatusBadRequest, "Возникал ошибка при чтении тела запроса: "+err.Error())
+		return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
 	coupleList := []*model.AliasFullCore{}
 	var couple *model.PostURLHandlerRequest
-
 	defer ctx.Request().Body.Close()
+
 	switch req {
 	case model.One:
 		err = json.Unmarshal(body, &couple)
@@ -62,22 +70,52 @@ func (s *Short) getBody(ctx echo.Context, req string) ([]*model.AliasFullCore, e
 		coupleList = append(coupleList, &model.AliasFullCore{
 			OriginalURL: couple.URL,
 			CorrID:      "",
+			UserID:      userID,
 		})
 	case model.List:
 		s.Logger.Info("ReaderBody.JSON - чтение jsonList запроса")
+
 		err = json.Unmarshal(body, &coupleList)
 		if err != nil {
 			errMsg := fmt.Errorf("возникла ошибка при чтении тела запроса: %w", err)
 			return nil, errMsg
 		}
+		for _, couple := range coupleList {
+			couple.UserID = userID
+		}
+
 		return coupleList, nil
-	default:
+	case model.Text:
 		s.Logger.Info("ReaderBody.text - чтение текстового URL")
+
 		originalURL := string(body)
 		coupleList = append(coupleList, &model.AliasFullCore{
 			OriginalURL: originalURL,
 			CorrID:      "",
+			UserID:      userID,
 		})
+	}
+	return coupleList, nil
+}
+
+func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
+	coupleList := []*model.UserURLResponse{}
+
+	userID, err := s.GetUserID(ctx)
+	if err != nil {
+		return nil, ctx.JSON(http.StatusUnauthorized, err.Error())
+	}
+
+	for _, couple := range s.CacheURL {
+		if couple.UserID == userID {
+			coupleList = append(coupleList, &model.UserURLResponse{
+				OriginalURL: couple.OriginalURL,
+				ShortURL:    couple.Alias,
+			})
+		}
+	}
+	if len(coupleList) == 0 {
+		return nil, ctx.JSON(http.StatusNotFound, "Пользователь не имеет созданных коротких URL")
 	}
 	return coupleList, nil
 }

@@ -1,0 +1,1 @@
+ALTER TABLE t_short.t_list ADD COLUMN IF NOT EXISTS s_user_id VARCHAR(50);

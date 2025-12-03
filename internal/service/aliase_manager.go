@@ -61,6 +61,7 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 	case model.DATABASE:
 		s.Logger.Info("insertURL - хранилище для данных: " + model.DATABASE)
 		if req == model.Text || req == model.One {
+			fmt.Println("а чего это пусто то,", listURL)
 			couple := listURL[0]
 			err := s.Repo.InsertURL(s.Ctx, couple)
 			if err != nil {
