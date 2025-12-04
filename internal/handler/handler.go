@@ -122,3 +122,22 @@ func (h *Handlers) getMyShortURL(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, userID)
 
 }
+
+func (h *Handlers) deleteURL(ctx echo.Context) error {
+	// Получаем значение заголовка Content-Type
+	contentType := ctx.Request().Header.Get("Content-Type")
+
+	// Проверяем, что Content-Type равен "application/json"
+	if contentType != "application/json" {
+		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
+	}
+	defer ctx.Request().Body.Close()
+
+	deleteList := []string{}
+	if err := ctx.Bind(&deleteList); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	}
+	h.Short.DeleteUserURL(ctx, deleteList)
+
+	return ctx.JSON(http.StatusAccepted, "")
+}

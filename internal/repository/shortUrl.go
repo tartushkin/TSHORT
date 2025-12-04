@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/tartushkin/TSHORT.git/internal/model"
@@ -36,7 +37,7 @@ func (r *Repo) InsertURL(ctx context.Context, couple *model.AliasFullCore) error
 }
 
 func (r *Repo) GetURLList(ctx context.Context) ([]*model.AliasFullCore, error) {
-	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full, s_user_id FROM t_short.t_list`)
+	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full, s_user_id, b_is_deleted FROM t_short.t_list`)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +45,7 @@ func (r *Repo) GetURLList(ctx context.Context) ([]*model.AliasFullCore, error) {
 	list := []*model.AliasFullCore{}
 	for rows.Next() {
 		url := &model.AliasFullCore{}
-		if err := rows.Scan(&url.Alias, &url.OriginalURL, &url.UserID); err != nil {
+		if err := rows.Scan(&url.Alias, &url.OriginalURL, &url.UserID, &url.DeletedFlag); err != nil {
 			return nil, err
 		}
 		list = append(list, url)
@@ -63,4 +64,15 @@ func (r *Repo) GetAlias(ctx context.Context, orig string) (string, error) {
 		return "", err
 	}
 	return alias, nil
+}
+
+func (r *Repo) DeleteURL(ctx context.Context, delStr string) error {
+	query := "UPDATE t_short.t_list SET b_is_deleted = true WHERE s_alias IN (?)"
+	query = strings.Replace(query, "?", delStr, 1)
+	_, err := r.conn.ExecContext(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

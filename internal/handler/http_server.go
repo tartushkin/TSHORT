@@ -47,6 +47,7 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 	h.httpServer.GET("/ping", h.testConnectionDB)
 	h.httpServer.POST("/api/shorten/batch", h.batchHandler)
 	h.httpServer.POST("/api/user/urls", h.getMyShortURL)
+	h.httpServer.DELETE("/api/user/urls", h.deleteURL)
 
 	h.httpServer.Logger.Fatal(h.httpServer.Start(httpPort))
 

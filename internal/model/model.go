@@ -43,6 +43,7 @@ type AliasFullCore struct {
 	OriginalURL string `json:"original_url"`
 	CorrID      string `json:"correlation_id"`
 	UserID      string `json:"user_id"`
+	DeletedFlag bool   `json:"is_deleted"`
 }
 
 type UserURLResponse struct {

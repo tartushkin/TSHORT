@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/tartushkin/TSHORT.git/internal/model"
@@ -103,7 +104,7 @@ func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
 
 	userID, err := s.GetUserID(ctx)
 	if err != nil {
-		return nil, ctx.JSON(http.StatusUnauthorized, err.Error())
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 
 	for _, couple := range s.CacheURL {
@@ -115,7 +116,37 @@ func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
 		}
 	}
 	if len(coupleList) == 0 {
-		return nil, ctx.JSON(http.StatusNotFound, "Пользователь не имеет созданных коротких URL")
+		return nil, echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("не нашли у пользователя URL"))
 	}
 	return coupleList, nil
+}
+
+func (s *Short) DeleteUserURL(ctx echo.Context, deleteList []string) {
+	userID, err := s.GetUserID(ctx)
+	if err != nil {
+		s.Logger.Error("ошибка - не удалось найти пользователя - ", err.Error())
+		//return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+	}
+	list := []string{}
+
+	for _, couple := range s.CacheURL {
+		for _, del := range deleteList {
+			if couple.Alias == del { // если нашли в кеше
+				if couple.UserID == userID { // если пользователь совпадает
+					if couple.DeletedFlag { // если тру идем на некст итерацию
+						continue
+					}
+					couple.DeletedFlag = true
+					list = append(list, couple.Alias)
+				}
+
+			}
+		}
+	}
+
+	delStr := "'" + strings.Join(list, "','") + "'"
+	err = s.Repo.DeleteURL(s.Ctx, delStr)
+	if err != nil {
+		s.Logger.Error("ошибка - не удалось удалить URL - ", err.Error())
+	}
 }
