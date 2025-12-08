@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -10,11 +11,14 @@ import (
 
 func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 	// Получаем значение заголовка Content-Type
-	contentType := ctx.Request().Header.Get("Content-Type")
+	//contentType := ctx.Request().Header.Get("Content-Type")
 	// Проверяем, что Content-Type равен "text/plain"
-	if contentType != "text/plain" {
-		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: text/plain")
-	}
+	fmt.Println("1")
+	//if contentType != "text/plain" {
+	//	fmt.Println("2")
+	//	return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: text/plain!!!!!")
+	//}
+	fmt.Println("3")
 	var shortURL string
 	list, err := h.Short.ReaderBody(ctx, model.Text)
 	if err != nil {
@@ -23,7 +27,7 @@ func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 	for _, couple := range list {
 		shortURL = couple.ShortURL
 	}
-
+	fmt.Println("че тут", shortURL)
 	return ctx.String(http.StatusCreated, shortURL)
 
 }
