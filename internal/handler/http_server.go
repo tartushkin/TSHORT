@@ -49,7 +49,9 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 	h.httpServer.POST("/api/user/urls", h.getMyShortURL)
 	h.httpServer.DELETE("/api/user/urls", h.deleteURL)
 
-	h.httpServer.Logger.Fatal(h.httpServer.Start(httpPort))
+	if err := h.httpServer.Start(httpPort); err != nil && err != http.ErrServerClosed {
+		h.httpServer.Logger.Info("Сервер остановлен: %v", err)
+	}
 
 	return nil
 }

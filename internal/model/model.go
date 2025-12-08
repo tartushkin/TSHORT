@@ -9,6 +9,7 @@ const (
 	DATABASE    = "DB"
 	FILE        = "FILE"
 	List        = "list"
+	Cache       = "cache"
 	One         = "one"
 	Text        = "text"
 	CONFLICT    = "данный URL"

@@ -51,12 +51,14 @@ func (s *Short) checkSourse() string {
 	if s.DNS != "" {
 		return model.DATABASE
 	}
-	return model.FILE
+	if s.File != nil {
+		return model.FILE
+	}
+	return model.Cache
 }
 
 func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 	sourse := s.checkSourse()
-
 	switch sourse {
 	case model.DATABASE:
 		s.Logger.Info("insertURL - хранилище для данных: " + model.DATABASE)
