@@ -13,7 +13,7 @@ func (s *Short) SetCouple(coupe *model.AliasFullCore) (string, error) {
 	s.mu.RLock()
 	s.CacheURL[coupe.Alias] = coupe
 	s.mu.RUnlock()
-	URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias)
+	URL := fmt.Sprintf("%s%s", s.Address, coupe.Alias) //URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias)
 	return URL, nil
 }
 
@@ -61,7 +61,6 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 	case model.DATABASE:
 		s.Logger.Info("insertURL - хранилище для данных: " + model.DATABASE)
 		if req == model.Text || req == model.One {
-			fmt.Println("а чего это пусто то,", listURL)
 			couple := listURL[0]
 			err := s.Repo.InsertURL(s.Ctx, couple)
 			if err != nil {
