@@ -3,7 +3,6 @@ package handler
 import (
 	"bytes"
 	"context"
-	"flag"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -21,18 +20,18 @@ var configPath string
 var DNS string
 
 func testCreate() *Handlers {
-	if DNS == "" {
-		flag.StringVar(&DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
-	}
-	if configPath == "" {
-		flag.StringVar(&configPath, "g", "./StorageURL.TXT", "путь для файла хранения URL")
-	}
+	//if DNS == "" {
+	//	flag.StringVar(&DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
+	//}
+	//if configPath == "" {
+	//	flag.StringVar(&configPath, "g", "./StorageURL.TXT", "путь для файла хранения URL")
+	//}
 	short := &service.Short{
 		CacheURL: make(map[string]*model.AliasFullCore),
 		Logger:   logrus.New(),
 	}
-	short.PathStorage = configPath
-	short.DNS = DNS
+	//short.PathStorage = configPath
+	//short.DNS = DNS
 	short.Ctx = context.Background()
 	conn, err := db.NewConnection(short.DNS)
 	if err != nil {
