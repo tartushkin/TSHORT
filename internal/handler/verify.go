@@ -15,30 +15,10 @@ const secretKey = "tort-secret-key"
 
 func cookieMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-
-		//path := c.Request().URL.Path
-		//fmt.Println("какаво", path)
-		//if path == "/" || path == "/ping" {
-		//	fmt.Println("зашли1", path)
-		//	// Устанавливаем временный userID, но не требуем куку
-		//	id, err := generateUniqueID()
-		//	fmt.Println("зашли2", id)
-		//	if err != nil {
-		//		return echo.NewHTTPError(http.StatusInternalServerError, "ошибка генерации userID")
-		//	}
-		//	c.Set("userID", id)
-		//	cookie, _ := c.Cookie("user_id")
-		//	fmt.Println("зашликуки", cookie)
-		//	return next(c)
-		//}
 		cookie, err := c.Cookie("user_id")
 
 		var userID string
 		if err != nil {
-			//path := c.Request().URL.Path
-			//if path == "/" || path == "/ping" {
-			//	return nil
-			//}
 			// Кука отсутствует, генерируем новый ID
 			id, err := generateUniqueID()
 			if err != nil {

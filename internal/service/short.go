@@ -34,21 +34,21 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 	cacheURL := map[string]*model.AliasFullCore{}
 
 	sh := &Short{
-		Logger:      lg,
-		Ctx:         ctx,
-		CacheURL:    cacheURL,
-		HTTPPort:    cfg.Port,
-		PathStorage: cfg.FileStoragePath,
-		DNS:         cfg.DNS,
+		Logger:   lg,
+		Ctx:      ctx,
+		CacheURL: cacheURL,
+		HTTPPort: cfg.Port,
 	}
-
-	sh.Address = cfg.Address
-	file, err := sh.NewFile()
-	if err != nil {
-		return nil, err
+	if cfg.FileStoragePath != "" {
+		sh.PathStorage = cfg.FileStoragePath
+		file, err := sh.NewFile()
+		if err != nil {
+			return nil, err
+		}
+		sh.File = file
 	}
-	sh.File = file
 	if cfg.DNS != "" {
+		sh.DNS = cfg.DNS
 		conn, err := db.NewConnection(cfg.DNS)
 		if err != nil {
 			panic(err)
@@ -57,7 +57,9 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		sh.conn = conn
 		sh.Repo = repository.NewRepository(sh.conn)
 	}
-	err = sh.LoadStorageURL() //подгрузка кеша
+	sh.Address = cfg.Address
+
+	err := sh.LoadStorageURL() //подгрузка кеша
 	if err != nil {
 		return nil, err
 	}
@@ -92,11 +94,6 @@ func (s *Short) Close() {
 
 // LoadStorageURL - подгрузка в кеш
 func (s *Short) LoadStorageURL() error {
-	_, err := s.File.SURL.Seek(0, 0)
-	if err != nil {
-		s.Logger.Error("Ошибка перемещения указателя файла: ", err)
-		return err
-	}
 	sourse := s.checkSourse()
 
 	switch sourse {
@@ -110,6 +107,11 @@ func (s *Short) LoadStorageURL() error {
 			s.Logger.Info(fmt.Sprintf("Прочитано и подгружено из БД в кеш пара: key:%v, value:%v", line.Alias, line.OriginalURL))
 		}
 	case model.FILE:
+		_, err := s.File.SURL.Seek(0, 0)
+		if err != nil {
+			s.Logger.Error("Ошибка перемещения указателя файла: ", err)
+			return err
+		}
 		decoder := json.NewDecoder(s.File.SURL)
 		var line model.AliasFullCore
 		for decoder.More() {
