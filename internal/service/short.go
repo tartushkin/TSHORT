@@ -10,7 +10,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
-	"github.com/tartushkin/TSHORT.git/internal/config/db"
 	"github.com/tartushkin/TSHORT.git/internal/model"
 	"github.com/tartushkin/TSHORT.git/internal/repository"
 )
@@ -47,16 +46,16 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		}
 		sh.File = file
 	}
-	if cfg.DNS != "" {
-		sh.DNS = cfg.DNS
-		conn, err := db.NewConnection(cfg.DNS)
-		if err != nil {
-			panic(err)
-		}
-		lg.Info("db: успешно подключились к DB")
-		sh.conn = conn
-		sh.Repo = repository.NewRepository(sh.conn)
-	}
+	//if cfg.DNS != "" {
+	//	sh.DNS = cfg.DNS
+	//	conn, err := db.NewConnection(cfg.DNS)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	lg.Info("db: успешно подключились к DB")
+	//	sh.conn = conn
+	//	sh.Repo = repository.NewRepository(sh.conn)
+	//}
 	sh.Address = cfg.Address
 
 	err := sh.LoadStorageURL() //подгрузка кеша
