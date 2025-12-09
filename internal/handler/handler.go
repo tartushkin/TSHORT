@@ -15,6 +15,7 @@ func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 	//if contentType != "text/plain" {
 	//	return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: text/plain!!!!!")
 	//}
+
 	var shortURL string
 	list, err := h.Short.ReaderBody(ctx, model.Text)
 	if err != nil {

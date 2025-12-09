@@ -13,7 +13,7 @@ func (s *Short) SetCouple(coupe *model.AliasFullCore) (string, error) {
 	s.mu.RLock()
 	s.CacheURL[coupe.Alias] = coupe
 	s.mu.RUnlock()
-	URL := fmt.Sprintf("%s%s", s.Address, coupe.Alias) //URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias)
+	URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias) //URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias)
 	return URL, nil
 }
 

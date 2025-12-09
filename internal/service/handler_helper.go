@@ -16,7 +16,6 @@ func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchRespons
 	s.Logger.Info("ReaderBody.start - чтение тела запроса")
 	list, err := s.getBody(ctx, req) // получаем тело запроса
 	if err != nil {
-
 		return nil, err
 	}
 	for _, couple := range list {
@@ -51,7 +50,7 @@ func (s *Short) getBody(ctx echo.Context, req string) ([]*model.AliasFullCore, e
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
-
+	//userID := "11"
 	body, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -70,7 +69,7 @@ func (s *Short) getBody(ctx echo.Context, req string) ([]*model.AliasFullCore, e
 		}
 		coupleList = append(coupleList, &model.AliasFullCore{
 			OriginalURL: couple.URL,
-			CorrID:      "",
+			CorrID:      "undefined",
 			UserID:      userID,
 		})
 	case model.List:
@@ -92,7 +91,7 @@ func (s *Short) getBody(ctx echo.Context, req string) ([]*model.AliasFullCore, e
 		originalURL := string(body)
 		coupleList = append(coupleList, &model.AliasFullCore{
 			OriginalURL: originalURL,
-			CorrID:      "",
+			CorrID:      "undefined",
 			UserID:      userID,
 		})
 	}

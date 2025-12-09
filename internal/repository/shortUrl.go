@@ -20,9 +20,9 @@ func (r *Repo) InsertURLJson(ctx context.Context, list []byte) error {
 }
 func (r *Repo) InsertURL(ctx context.Context, couple *model.AliasFullCore) error {
 	_, err := r.conn.ExecContext(ctx, `
-	INSERT INTO t_short.t_list(s_alias, s_full)
-	VALUES ($1,$2);
-	`, couple.Alias, couple.OriginalURL)
+	INSERT INTO t_short.t_list(s_alias, s_full, n_corr_id, s_user_id)
+	VALUES ($1,$2,$3,$4);
+	`, couple.Alias, couple.OriginalURL, "-", "undefined")
 	if err != nil {
 		// Проверяем, является ли ошибка ошибкой уникальности
 		var pgErr *pgconn.PgError

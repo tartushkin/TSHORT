@@ -37,6 +37,7 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 	h.httpServer.Use(middleware.Logger()) //в билиотеке уже есть middleware для логирования запрсов
 	h.httpServer.Use(middleware.Recover())
 	h.httpServer.Use(GzipMiddleware)
+
 	h.httpServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return cookieMiddleware(next)
 	})
