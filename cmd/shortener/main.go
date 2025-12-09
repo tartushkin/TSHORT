@@ -13,7 +13,6 @@ import (
 
 func main() {
 	lg := logrus.New()
-	//ALTER TABLE t_short.t_list ADD CONSTRAINT IF NOT EXISTS unique_s_full UNIQUE (s_full);
 	ctx := context.Background()
 	cfg := cfg.NewConfig()             // инициализация конфига
 	sh, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
