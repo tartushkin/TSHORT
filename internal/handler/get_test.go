@@ -29,8 +29,8 @@ func testCreate() *Handlers {
 		CacheURL: make(map[string]*model.AliasFullCore),
 		Logger:   logrus.New(),
 	}
-	short.PathStorage = configPath
-	short.DNS = DNS
+	//short.PathStorage = configPath
+	//short.DNS = DNS
 	short.Ctx = context.Background()
 	//conn, err := db.NewConnection(short.DNS)
 	//if err != nil {
