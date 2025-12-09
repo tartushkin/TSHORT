@@ -41,11 +41,11 @@ func testCreate() *Handlers {
 	//short.Repo = repository.NewRepository(conn)
 
 	TestHandlers := &Handlers{Short: short}
-	file, err := TestHandlers.Short.NewFile()
-	if err != nil {
-		short.Logger.Fatalf("Ошибка при формировании файла: %v", err)
-	}
-	TestHandlers.Short.File = file
+	//file, err := TestHandlers.Short.NewFile()
+	//if err != nil {
+	//	short.Logger.Fatalf("Ошибка при формировании файла: %v", err)
+	//}
+	////TestHandlers.Short.File = file
 	return TestHandlers
 }
 func TestGetHandler(t *testing.T) {
