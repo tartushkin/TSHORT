@@ -11,9 +11,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/tartushkin/TSHORT.git/internal/config/db"
 	"github.com/tartushkin/TSHORT.git/internal/model"
-	"github.com/tartushkin/TSHORT.git/internal/repository"
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
@@ -34,13 +32,13 @@ func testCreate() *Handlers {
 	short.PathStorage = configPath
 	short.DNS = DNS
 	short.Ctx = context.Background()
-	conn, err := db.NewConnection(short.DNS)
-	if err != nil {
-		panic(err)
-	}
-	short.Logger.Info("db: успешно подключились к DB")
-
-	short.Repo = repository.NewRepository(conn)
+	//conn, err := db.NewConnection(short.DNS)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//short.Logger.Info("db: успешно подключились к DB")
+	//
+	//short.Repo = repository.NewRepository(conn)
 
 	TestHandlers := &Handlers{Short: short}
 	file, err := TestHandlers.Short.NewFile()
