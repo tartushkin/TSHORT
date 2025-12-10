@@ -48,7 +48,6 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		sh.File = file
 	}
 	if cfg.DNS != "" {
-		sh.DNS = cfg.DNS
 		conn, err := db.NewConnection(cfg.DNS)
 		if err != nil {
 			lg.Info("db: не удалось подключилиться к DB, используем другое хранилище")

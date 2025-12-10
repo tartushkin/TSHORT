@@ -33,7 +33,6 @@ func NewConnection(ps string) (*sql.DB, error) {
 	return db, nil
 }
 func migration(ps string) error {
-	//migrationsPath := getMigrationPath()
 	// Запуск миграций при старте приложения
 	m, err := migrate.New(
 		"file://./migrations",
