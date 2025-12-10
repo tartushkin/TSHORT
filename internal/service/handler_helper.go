@@ -12,8 +12,6 @@ import (
 )
 
 func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchResponse, error) {
-
-	s.Logger.Info("ReaderBody.start - чтение тела запроса")
 	list, err := s.getBody(ctx, req) // получаем тело запроса
 	if err != nil {
 		return nil, err

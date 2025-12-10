@@ -48,7 +48,7 @@ func (s *Short) checkURL(outURL string) error {
 }
 
 func (s *Short) checkSourse() string {
-	if s.DNS != "" {
+	if s.conn != nil {
 		return model.DATABASE
 	}
 	if s.File != nil {

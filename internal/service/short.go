@@ -51,11 +51,14 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		sh.DNS = cfg.DNS
 		conn, err := db.NewConnection(cfg.DNS)
 		if err != nil {
-			panic(err)
+			lg.Info("db: не удалось подключилиться к DB, используем другое хранилище")
+		} else {
+			sh.DNS = cfg.DNS
+			lg.Info("db: успешно подключились к DB")
+			sh.conn = conn
+			sh.Repo = repository.NewRepository(sh.conn)
 		}
-		lg.Info("db: успешно подключились к DB")
-		sh.conn = conn
-		sh.Repo = repository.NewRepository(sh.conn)
+
 	}
 	sh.Address = cfg.Address
 
