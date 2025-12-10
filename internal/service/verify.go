@@ -9,7 +9,7 @@ import (
 // getUserID - извлекает ID пользователя из куки
 func (s *Short) GetUserID(c echo.Context) (string, error) {
 	path := c.Request().URL.Path
-	if path == "/" || path == "/ping" {
+	if path == "/" || path == "/ping" || path == "/api/shorten" {
 		return "testID", nil
 	}
 

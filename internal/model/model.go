@@ -18,7 +18,7 @@ const (
 )
 
 type PostURLHandlerRequest struct {
-	URL string
+	URL string `json:"url"`
 }
 type PostURLHandlerResponse struct {
 	ErrMsg string

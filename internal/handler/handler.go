@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -32,23 +33,25 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 	// Получаем URL из параметров запроса
 	alias := ctx.Param("id")
 	if alias == "" {
+		fmt.Println("1")
 		return ctx.String(http.StatusBadRequest, "Требуется алиас")
 	}
-
+	fmt.Println("2")
 	// Извлекаем алиас
 	originalURL, err := h.Short.GetAliasName(alias)
 	if err != nil {
+		fmt.Println("3")
 		return ctx.String(http.StatusNotFound, "URL не найден")
 	}
-	h.Short.Logger.Info("HTTP.Response - возвращаем полный URL по алиасу: " + alias + "/" + originalURL)
-	res := ctx.Redirect(http.StatusTemporaryRedirect, originalURL)
-
+	fmt.Println("originalURL тут -", originalURL)
+	h.Short.Logger.Info("HTTP.Response - возвращаем полный URL по алиасу: " + alias + " - " + originalURL)
+	ctx.Redirect(http.StatusTemporaryRedirect, originalURL)
 	for key, values := range ctx.Response().Header() {
 		for _, value := range values {
 			h.Short.Logger.Info("HTTP.headers - " + key + ":" + value)
 		}
 	}
-	return res
+	return nil
 }
 
 func (h *Handlers) postURLHandler(ctx echo.Context) error {

@@ -1,4 +1,0 @@
-{"alias":"a98bbb3e","original_url":"https://example.com","correlation_id":""}
-{"alias":"ea6f5de3","original_url":"https://example.com","correlation_id":""}
-{"alias":"3b26a382","original_url":"https://example.com","correlation_id":""}
-{"alias":"7b163cb1","original_url":"https://exampl.com","correlation_id":""}

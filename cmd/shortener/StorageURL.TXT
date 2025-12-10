@@ -1,3 +1,3 @@
-{"alias":"08c6c6b2","original_url":"https://nk.lordfilm17.ru/filmy/","correlation_id":""}
-{"alias":"e3390197","original_url":"https://nk.lordfilm17.ru","correlation_id":"1"}
-{"alias":"a66bc0ff","original_url":"https://yandex.ru/images/search","correlation_id":"2"}
+
+
+{"alias":"c81c1988","original_url":"https://gb.lordfilm17.ru/","correlation_id":"undefined","user_id":"testID","is_deleted":false}
