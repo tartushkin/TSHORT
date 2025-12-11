@@ -2,10 +2,7 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
-	"net/url"
-	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -20,12 +17,7 @@ func NewConnection(ps string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("Строка подлючения до :  " + ps)
-	dbURL, err := convertDSNToURL(ps)
-	if err != nil {
-		return nil, err
-	}
-	err = migration(dbURL)
+	err = migration(ps)
 	if err != nil {
 		return nil, err
 	}
@@ -48,33 +40,4 @@ func migration(ps string) error {
 		return err
 	}
 	return nil
-}
-
-// convertDSNToURL преобразует строку подключения в формате key=value в URL-формат
-func convertDSNToURL(dsn string) (string, error) {
-	// Разбиваем строку на пары key=value
-	parts := strings.Fields(dsn)
-	params := make(map[string]string)
-	for _, part := range parts {
-		kv := strings.SplitN(part, "=", 2)
-		if len(kv) == 2 {
-			params[kv[0]] = kv[1]
-		}
-	}
-
-	// Формируем URL
-	u := url.URL{
-		Scheme: "postgres",
-		User:   url.UserPassword(params["user"], params["password"]),
-		Host:   fmt.Sprintf("%s:%s", params["host"], params["port"]),
-		Path:   params["dbname"],
-	}
-	// Добавляем параметры запроса
-	query := url.Values{}
-	if sslmode, ok := params["sslmode"]; ok {
-		query.Add("sslmode", sslmode)
-	}
-	u.RawQuery = query.Encode()
-
-	return u.String(), nil
 }
