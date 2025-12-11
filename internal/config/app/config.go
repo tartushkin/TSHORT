@@ -34,7 +34,7 @@ func NewConfig() *Config {
 	if fileStoragePath, exists := os.LookupEnv("FILE_STORAGE_PATH"); exists && fileStoragePath != "" {
 		cfg.FileStoragePath = fileStoragePath
 	}
-	if db, exists := os.LookupEnv("DATABASE_DNS"); exists && db != "" {
+	if db, exists := os.LookupEnv("DATABASE_DSN"); exists && db != "" {
 		cfg.DNS = db
 	}
 
