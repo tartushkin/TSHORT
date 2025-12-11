@@ -96,12 +96,14 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 
 	// Проверяем, что Content-Type равен "application/json"
 	if contentType != "application/json" {
-		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
+		h.Short.Logger.Error("Content-Type не соответсвует ожидаемому: application/json")
+		return ctx.JSON(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
 	}
 	defer ctx.Request().Body.Close()
 
 	listURL, err := h.Short.ReaderBody(ctx, model.List)
 	if err != nil {
+		h.Short.Logger.Error("Ошибка при работе с телом запроса: " + err.Error())
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
@@ -120,7 +122,8 @@ func (h *Handlers) getMyShortURL(ctx echo.Context) error {
 
 	userID, err := h.Short.GetUserURL(ctx)
 	if err != nil {
-		return err
+		h.Short.Logger.Error("Ошибка при работе с телом запроса: " + err.Error())
+		return ctx.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return ctx.JSON(http.StatusOK, userID)
 
@@ -138,7 +141,8 @@ func (h *Handlers) deleteURL(ctx echo.Context) error {
 
 	deleteList := []string{}
 	if err := ctx.Bind(&deleteList); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+		h.Short.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "error:"+err.Error())
 	}
 	h.Short.DeleteUserURL(ctx, deleteList)
 

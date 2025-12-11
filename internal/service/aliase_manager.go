@@ -38,13 +38,14 @@ func (s *Short) write(event *model.AliasFullCore) error {
 }
 
 // проверка наличия url в кеше
-func (s *Short) checkURL(outURL string) error {
+func (s *Short) checkURL(outURL string) (string, bool) {
 	for _, coupe := range s.CacheURL {
 		if coupe.OriginalURL == outURL {
-			return fmt.Errorf("данный URL - %s уже есть в кеше приложения по ключу: %s", outURL, coupe.Alias)
+			s.Logger.Info(fmt.Sprintf("данный URL - %s уже есть в кеше приложения по ключу: %s", outURL, coupe.Alias))
+			return coupe.Alias, true
 		}
 	}
-	return nil
+	return "", false
 }
 
 func (s *Short) checkSourse() string {

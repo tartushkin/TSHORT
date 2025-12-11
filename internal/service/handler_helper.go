@@ -16,19 +16,31 @@ func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchRespons
 	if err != nil {
 		return nil, err
 	}
+	responseList := []*model.BranchResponse{}
+	newList := []*model.AliasFullCore{}
 	for _, couple := range list {
-		err := s.checkURL(couple.OriginalURL) //сначала проверяем кеш, потом проверяем наличие в базе
-		if err != nil {
-			return nil, err
+		alias, ok := s.checkURL(couple.OriginalURL) //сначала проверяем кеш, потом проверяем наличие в базе
+		if ok {
+			responseList = append(responseList, &model.BranchResponse{
+				ShortURL: alias,
+				CorrID:   couple.CorrID,
+			})
+			//return nil, err
+			continue
 		}
-		couple.Alias = s.getUUID()
+		newList = append(newList, &model.AliasFullCore{
+			Alias:       s.getUUID(),
+			OriginalURL: couple.OriginalURL,
+			CorrID:      couple.CorrID,
+			UserID:      couple.UserID,
+		})
 	}
-	err = s.insertURL(list, req)
+	err = s.insertURL(newList, req)
 	if err != nil {
 		return nil, err
 	}
-	responseList := []*model.BranchResponse{}
-	for _, couple := range list {
+
+	for _, couple := range newList {
 		fullURL, err := s.SetCouple(couple)
 		if err != nil {
 			return nil, err

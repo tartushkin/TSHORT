@@ -3,6 +3,7 @@ package handler
 import (
 	"compress/gzip"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -37,10 +38,29 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 	h.httpServer.Use(middleware.Logger()) //в билиотеке уже есть middleware для логирования запрсов
 	h.httpServer.Use(middleware.Recover())
 	h.httpServer.Use(GzipMiddleware)
-
 	h.httpServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return cookieMiddleware(next)
 	})
+	h.httpServer.HTTPErrorHandler = func(err error, c echo.Context) {
+		// Логируем ошибку
+		c.Logger().Error(err)
+
+		// Определяем код и сообщение
+		code := http.StatusInternalServerError
+		message := "Internal Server Error"
+
+		if he, ok := err.(*echo.HTTPError); ok {
+			code = he.Code
+			message = fmt.Sprintf("%v", he.Message)
+		}
+
+		// Отправляем JSON
+		if !c.Response().Committed {
+			c.JSON(code, map[string]string{
+				"error": message,
+			})
+		}
+	}
 
 	h.httpServer.POST("/", h.oldPostURLHandler)
 	h.httpServer.GET("/:id", h.getRedirectHandler)
@@ -61,7 +81,6 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 func (h *Handlers) StopHTTP(ctx context.Context) {
 	h.httpServer.Shutdown(ctx)
 }
-
 func GzipMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// Проверяем, что клиент поддерживает сжатие ответа
