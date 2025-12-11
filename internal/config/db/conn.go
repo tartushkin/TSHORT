@@ -20,7 +20,7 @@ func NewConnection(ps string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	log.Println("Строка подлючения до :  " + ps)
 	dbURL, err := convertDSNToURL(ps)
 	if err != nil {
 		return nil, err
