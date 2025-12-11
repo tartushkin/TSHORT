@@ -72,7 +72,8 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 					if err != nil {
 						return err
 					}
-					return fmt.Errorf("данный URL - %v уже есть в БД приложения по ключу: %v", couple.OriginalURL, alias)
+					s.Logger.Error(fmt.Errorf("данный URL - %v уже есть в БД приложения по ключу: %v", couple.OriginalURL, alias))
+					return fmt.Errorf(model.ERRCONFLICT)
 				}
 				return fmt.Errorf("возникла ошибка: %w при записи в БД новую пару URL", err)
 			}

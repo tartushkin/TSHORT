@@ -61,10 +61,10 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 	}
 	sh.Address = cfg.Address
 
-	err := sh.LoadStorageURL() //подгрузка кеша
-	if err != nil {
-		return nil, err
-	}
+	//err := sh.LoadStorageURL() //подгрузка кеша
+	//if err != nil {
+	//	return nil, err
+	//}
 	return sh, nil
 }
 
@@ -100,7 +100,7 @@ func (s *Short) LoadStorageURL() error {
 
 	switch sourse {
 	case model.DATABASE:
-		list, err := s.Repo.GetURLList(s.Ctx)
+		list, err := s.Repo.LoadCache(s.Ctx)
 		if err != nil {
 			return err
 		}

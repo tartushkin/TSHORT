@@ -36,7 +36,7 @@ func (r *Repo) InsertURL(ctx context.Context, couple *model.AliasFullCore) error
 	return nil
 }
 
-func (r *Repo) GetURLList(ctx context.Context) ([]*model.AliasFullCore, error) {
+func (r *Repo) LoadCache(ctx context.Context) ([]*model.AliasFullCore, error) {
 	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full, s_user_id, b_is_deleted FROM t_short.t_list`)
 	if err != nil {
 		return nil, err

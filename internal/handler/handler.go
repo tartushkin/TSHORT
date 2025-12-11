@@ -104,6 +104,9 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 	listURL, err := h.Short.ReaderBody(ctx, model.List)
 	if err != nil {
 		h.Short.Logger.Error("Ошибка при работе с телом запроса: " + err.Error())
+		if err.Error() == model.CONFLICT {
+			return ctx.JSON(http.StatusConflict, err.Error())
+		}
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
