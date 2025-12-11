@@ -15,7 +15,10 @@ const secretKey = "tort-secret-key"
 
 func cookieMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if c.Request().URL.Path == "/" || c.Request().URL.Path == "/ping" || c.Request().URL.Path == "/api/shorten" {
+		//if c.Request().URL.Path == "/" || c.Request().URL.Path == "/ping" || c.Request().URL.Path == "/api/shorten" {
+		//	return next(c)
+		//}
+		if c.Request().URL.Path != "/api/user/urls" {
 			return next(c)
 		}
 		cookie, err := c.Cookie("user_id")
