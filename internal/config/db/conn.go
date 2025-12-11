@@ -39,7 +39,7 @@ func migration(ps string) error {
 		ps)
 	if err != nil {
 		//log.Fatalf("Ошибка создания объекта миграции: %v", err)
-		log.Println("Папка migrations не найдена, пропускаем миграции, ошибка - " + err.Error())
+		log.Println("Ошибка создания объекта миграции:  " + err.Error() + ". Строка подключения - " + ps)
 		return err
 	}
 
