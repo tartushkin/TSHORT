@@ -107,7 +107,7 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	return ctx.JSON(http.StatusOK, listURL)
+	return ctx.JSON(http.StatusCreated, listURL)
 }
 
 func (h *Handlers) getMyShortURL(ctx echo.Context) error {
