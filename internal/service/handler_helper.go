@@ -44,8 +44,8 @@ func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchRespons
 	for _, couple := range newList {
 		fullURL := s.getFull(couple.Alias)
 		responseList = append(responseList, &model.BranchResponse{ShortURL: fullURL, CorrID: couple.CorrID})
-		s.Logger.Info(fmt.Sprintf("ReaderBody.jsonList - запись пары в список для отправки в хранилище: %s/%s/%s ",
-			couple.Alias, couple.OriginalURL, couple.CorrID))
+		s.Logger.Info(fmt.Sprintf("ReaderBody.jsonList - запись пары в список для отправки в хранилище: %s/%s/%s/%s ",
+			couple.Alias, couple.OriginalURL, couple.CorrID, couple.UserID))
 	}
 	return responseList, nil
 }
@@ -114,7 +114,9 @@ func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
 	}
 
 	for _, couple := range s.CacheURL {
+		fmt.Println("я тута и у меня id - ", couple.UserID)
 		if couple.UserID == userID {
+			fmt.Println("есть сходство - ", couple.UserID)
 			coupleList = append(coupleList, &model.UserURLResponse{
 				OriginalURL: couple.OriginalURL,
 				ShortURL:    couple.Alias,

@@ -125,9 +125,10 @@ func (h *Handlers) getMyShortURL(ctx echo.Context) error {
 	userID, err := h.Short.GetUserURL(ctx)
 	if err != nil {
 		h.Short.Logger.Error("Ошибка при работе с телом запроса: " + err.Error())
-		//return ctx.JSON(http.StatusInternalServerError, err.Error())
 		return err
+		//return ctx.JSON(http.StatusNoContent, err.Error())
 	}
+	h.Short.Logger.Info("Возвращаем список URL: ", userID)
 	return ctx.JSON(http.StatusOK, userID)
 
 }

@@ -22,7 +22,7 @@ func (r *Repo) InsertURL(ctx context.Context, couple *model.AliasFullCore) error
 	_, err := r.conn.ExecContext(ctx, `
 	INSERT INTO t_short.t_list(s_alias, s_full, n_corr_id, s_user_id)
 	VALUES ($1,$2,$3,$4);
-	`, couple.Alias, couple.OriginalURL, "-", "undefined")
+	`, couple.Alias, couple.OriginalURL, "-", couple.UserID)
 	if err != nil {
 		// Проверяем, является ли ошибка ошибкой уникальности
 		var pgErr *pgconn.PgError
