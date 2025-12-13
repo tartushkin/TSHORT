@@ -10,16 +10,13 @@ import (
 )
 
 func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
-	// Получаем значение заголовка Content-Type
-	//contentType := ctx.Request().Header.Get("Content-Type")
-	// Проверяем, что Content-Type равен "text/plain"
-	//if contentType != "text/plain" {
-	//	return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: text/plain!!!!!")
-	//}
-
 	var shortURL string
 	list, err := h.Short.ReaderBody(ctx, model.Text)
 	if err != nil {
+		if strings.HasPrefix(err.Error(), model.ERRCONFLICT) {
+			parts := strings.Split(err.Error(), "-")
+			return ctx.JSON(http.StatusConflict, parts[1])
+		}
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	for _, couple := range list {
@@ -71,7 +68,8 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 	if err != nil {
 		res.ErrMsg = err.Error()
 		if strings.HasPrefix(res.ErrMsg, model.ERRCONFLICT) {
-			return ctx.JSON(http.StatusConflict, res)
+			parts := strings.Split(err.Error(), "-")
+			return ctx.JSON(http.StatusConflict, parts[1])
 		}
 		return ctx.JSON(http.StatusInternalServerError, res)
 	}
