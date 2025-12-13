@@ -39,9 +39,10 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 	fmt.Println("2")
 	// Извлекаем алиас
 	originalURL, err := h.Short.GetAliasName(alias)
+	fmt.Println("че тут", originalURL)
 	if err != nil {
 		fmt.Println("3")
-		return ctx.String(http.StatusNotFound, "URL не найден")
+		return ctx.String(http.StatusNotFound, err.Error())
 	}
 	fmt.Println("originalURL тут -", originalURL)
 	h.Short.Logger.Info("HTTP.Response - возвращаем полный URL по алиасу: " + alias + " - " + originalURL)

@@ -76,3 +76,12 @@ func (r *Repo) DeleteURL(ctx context.Context, delStr string) error {
 
 	return nil
 }
+
+func (r *Repo) GetOriginalURL(ctx context.Context, alias string) (string, error) {
+	var original string
+	err := r.conn.QueryRowContext(ctx, `SELECT s_full FROM t_short.t_list WHERE s_alias = $1`, alias).Scan(&original)
+	if err != nil {
+		return "", err
+	}
+	return original, nil
+}

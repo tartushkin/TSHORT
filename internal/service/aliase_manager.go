@@ -27,7 +27,11 @@ func (s *Short) GetAliasName(aliasURL string) (string, error) {
 	coupe, ok := s.CacheURL[aliasURL]
 	s.mu.RUnlock()
 	if !ok {
-		return "", fmt.Errorf("не удалось найти оригинальный url по сокращенному: %s", aliasURL)
+		orig, err := s.Repo.GetOriginalURL(s.Ctx, aliasURL)
+		if err != nil {
+			return "", fmt.Errorf("не удалось найти оригинальный url по сокращенному: %s", aliasURL)
+		}
+		return orig, nil
 	}
 
 	return coupe.OriginalURL, nil
@@ -76,8 +80,9 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 					if err != nil {
 						return err
 					}
-					s.Logger.Error(fmt.Errorf("данный URL - %v уже есть в БД приложения по ключу: %v", couple.OriginalURL, alias))
-					return fmt.Errorf(model.ERRCONFLICT)
+					errMsg := fmt.Errorf("%s - данный URL - %v уже есть в БД приложения по ключу: %v", model.ERRCONFLICT, couple.OriginalURL, alias)
+					s.Logger.Error(errMsg)
+					return errMsg
 				}
 				return fmt.Errorf("возникла ошибка: %w при записи в БД новую пару URL", err)
 			}
@@ -87,7 +92,6 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 				return err
 			}
 			err = s.Repo.InsertURLJson(s.Ctx, list)
-
 			if err != nil {
 				return fmt.Errorf("возникла ошибка: %w при записи в БД новую пару URL", err)
 			}
