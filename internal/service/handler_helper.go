@@ -121,7 +121,20 @@ func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
 		}
 	}
 	if len(coupleList) == 0 {
-		return nil, echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("не нашли у пользователя URL"))
+		list, err := s.Repo.GetUserURL(s.Ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+		for _, couple := range list {
+			coupleList = append(coupleList, &model.UserURLResponse{
+				OriginalURL: couple.OriginalURL,
+				ShortURL:    couple.Alias,
+			})
+		}
+		if len(list) == 0 {
+			return nil, echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("не нашли у пользователя URL"))
+		}
+		return coupleList, nil
 	}
 	return coupleList, nil
 }

@@ -85,3 +85,24 @@ func (r *Repo) GetOriginalURL(ctx context.Context, alias string) (string, error)
 	}
 	return original, nil
 }
+
+func (r *Repo) GetUserURL(ctx context.Context, userID string) ([]*model.AliasFullCore, error) {
+	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full, b_is_deleted FROM t_short.t_list WHERE s_user_id = $1`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	list := []*model.AliasFullCore{}
+	for rows.Next() {
+		url := &model.AliasFullCore{}
+		if err := rows.Scan(&url.Alias, &url.OriginalURL, &url.DeletedFlag); err != nil {
+			return nil, err
+		}
+		list = append(list, url)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
