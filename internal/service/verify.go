@@ -16,6 +16,7 @@ func (s *Short) GetUserID(c echo.Context) (string, error) {
 	//}
 	if userID, ok := c.Get("userID").(string); ok {
 		fmt.Println("тута1")
+		fmt.Println("userID", userID)
 		return userID, nil
 	}
 	fmt.Println("тута2")

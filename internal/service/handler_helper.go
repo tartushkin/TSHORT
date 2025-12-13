@@ -132,7 +132,7 @@ func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
 			})
 		}
 		if len(list) == 0 {
-			return nil, echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("не нашли у пользователя URL"))
+			return nil, echo.NewHTTPError(http.StatusNoContent, fmt.Errorf("не нашли у пользователя URL"))
 		}
 		return coupleList, nil
 	}
