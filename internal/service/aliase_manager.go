@@ -9,12 +9,16 @@ import (
 )
 
 // SetCouple - добавление пары сокращенный/оригинальный url в кеш
-func (s *Short) SetCouple(coupe *model.AliasFullCore) (string, error) {
+func (s *Short) setCouple(coupe *model.AliasFullCore) {
 	s.mu.RLock()
 	s.CacheURL[coupe.Alias] = coupe
 	s.mu.RUnlock()
-	URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias) //URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias)
-	return URL, nil
+	//URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias) //URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias)
+}
+
+func (s *Short) getFull(alias string) string {
+	URL := fmt.Sprintf("%s/%s", s.Address, alias)
+	return URL
 }
 
 // GetAliasName - получение оригинального url
@@ -95,6 +99,7 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 			if err != nil {
 				return fmt.Errorf("возникла ошибка: %w при записи в файл новую пару URL", err)
 			}
+			s.setCouple(couple)
 		}
 
 	}

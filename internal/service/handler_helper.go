@@ -25,7 +25,6 @@ func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchRespons
 				ShortURL: alias,
 				CorrID:   couple.CorrID,
 			})
-			//return nil, err
 			continue
 		}
 		newList = append(newList, &model.AliasFullCore{
@@ -43,11 +42,11 @@ func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchRespons
 	}
 
 	for _, couple := range newList {
-		fullURL, err := s.SetCouple(couple)
-		if err != nil {
-			return nil, err
-		}
-
+		//fullURL, err := s.SetCouple(couple)
+		//if err != nil {
+		//	return nil, err
+		//}
+		fullURL := s.getFull(couple.Alias)
 		responseList = append(responseList, &model.BranchResponse{ShortURL: fullURL, CorrID: couple.CorrID})
 		s.Logger.Info(fmt.Sprintf("ReaderBody.jsonList - запись пары в список для отправки в хранилище: %s/%s/%s ",
 			couple.Alias, couple.OriginalURL, couple.CorrID))
