@@ -68,8 +68,8 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 	if err != nil {
 		res.ErrMsg = err.Error()
 		if strings.HasPrefix(res.ErrMsg, model.ERRCONFLICT) {
-			parts := strings.Split(err.Error(), "-")
-			return ctx.JSON(http.StatusConflict, parts[1])
+			//parts := strings.Split(err.Error(), "-")
+			return ctx.JSON(http.StatusConflict, err.Error())
 		}
 		return ctx.JSON(http.StatusInternalServerError, res)
 	}
