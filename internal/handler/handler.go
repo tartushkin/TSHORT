@@ -15,7 +15,7 @@ func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 	if err != nil {
 		if strings.HasPrefix(err.Error(), model.ERRCONFLICT) {
 			parts := strings.Split(err.Error(), "-")
-			return ctx.JSON(http.StatusConflict, parts[1])
+			return ctx.String(http.StatusConflict, parts[1])
 		}
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -69,7 +69,7 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 		res.ErrMsg = err.Error()
 		if strings.HasPrefix(res.ErrMsg, model.ERRCONFLICT) {
 			//parts := strings.Split(err.Error(), "-")
-			return ctx.JSON(http.StatusConflict, err.Error())
+			return ctx.JSON(http.StatusConflict, res)
 		}
 		return ctx.JSON(http.StatusInternalServerError, res)
 	}
