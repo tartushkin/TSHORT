@@ -35,9 +35,11 @@ func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchRespons
 			UserID:      couple.UserID,
 		})
 	}
-	err = s.insertURL(newList, req)
-	if err != nil {
-		return nil, err
+	if len(newList) > 0 {
+		err = s.insertURL(newList, req)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for _, couple := range newList {
@@ -60,7 +62,6 @@ func (s *Short) getBody(ctx echo.Context, req string) ([]*model.AliasFullCore, e
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
-	//userID := "11"
 	body, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
