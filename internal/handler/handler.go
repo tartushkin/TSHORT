@@ -69,7 +69,7 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 	listURL, err := h.Short.ReaderBody(ctx, model.One)
 	if err != nil {
 		res.ErrMsg = err.Error()
-		if strings.HasPrefix(res.ErrMsg, model.CONFLICT) {
+		if strings.HasPrefix(res.ErrMsg, model.ERRCONFLICT) {
 			return ctx.JSON(http.StatusConflict, res)
 		}
 		return ctx.JSON(http.StatusInternalServerError, res)

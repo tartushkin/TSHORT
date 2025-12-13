@@ -59,7 +59,7 @@ func (s *Short) checkSourse() string {
 	if s.File != nil {
 		return model.FILE
 	}
-	return model.Cache
+	return model.CACHE
 }
 
 func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
@@ -87,6 +87,7 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 				return err
 			}
 			err = s.Repo.InsertURLJson(s.Ctx, list)
+
 			if err != nil {
 				return fmt.Errorf("возникла ошибка: %w при записи в БД новую пару URL", err)
 			}
@@ -101,7 +102,12 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 			}
 			s.setCouple(couple)
 		}
-
+	case model.CACHE:
+		s.Logger.Info("insertURL - хранилище для данных: " + model.CACHE)
+		for _, couple := range listURL {
+			s.Logger.Info(fmt.Sprintf("insertURL - запись в кеш: %v  ", couple))
+			s.setCouple(couple)
+		}
 	}
 	return nil
 }
