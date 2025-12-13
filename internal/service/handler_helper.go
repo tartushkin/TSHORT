@@ -59,6 +59,7 @@ func (s *Short) getBody(ctx echo.Context, req string) ([]*model.AliasFullCore, e
 	}
 	body, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
+		s.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
 		return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 

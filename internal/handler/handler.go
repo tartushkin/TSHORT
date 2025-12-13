@@ -114,13 +114,13 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 
 func (h *Handlers) getMyShortURL(ctx echo.Context) error {
 	// Получаем значение заголовка Content-Type
-	contentType := ctx.Request().Header.Get("Content-Type")
-
-	// Проверяем, что Content-Type равен "application/json"
-	if contentType != "application/json" {
-		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
-	}
-	defer ctx.Request().Body.Close()
+	//contentType := ctx.Request().Header.Get("Content-Type")
+	//
+	//// Проверяем, что Content-Type равен "application/json"
+	//if contentType != "application/json" {
+	//	return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
+	//}
+	//defer ctx.Request().Body.Close()
 
 	userID, err := h.Short.GetUserURL(ctx)
 	if err != nil {
@@ -134,13 +134,13 @@ func (h *Handlers) getMyShortURL(ctx echo.Context) error {
 
 func (h *Handlers) deleteURL(ctx echo.Context) error {
 	// Получаем значение заголовка Content-Type
-	contentType := ctx.Request().Header.Get("Content-Type")
-
-	// Проверяем, что Content-Type равен "application/json"
-	if contentType != "application/json" {
-		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
-	}
-	defer ctx.Request().Body.Close()
+	//contentType := ctx.Request().Header.Get("Content-Type")
+	//
+	//// Проверяем, что Content-Type равен "application/json"
+	//if contentType != "application/json" {
+	//	return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
+	//}
+	//defer ctx.Request().Body.Close()
 
 	deleteList := []string{}
 	if err := ctx.Bind(&deleteList); err != nil {
