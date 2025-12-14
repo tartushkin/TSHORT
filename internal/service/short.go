@@ -141,7 +141,7 @@ func (s *Short) LoadStorageURL() error {
 }
 
 func (s *Short) StartCleanup(ctx context.Context, param time.Duration) {
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(param)
 	s.Logger.Info("StartCleanup.start - старт процесса очистки помеченных на удаления URL")
 	for {
 		s.Logger.Info("StartCleanup.wait - ожидание новой итерации очистки")
