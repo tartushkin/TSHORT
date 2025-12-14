@@ -114,9 +114,7 @@ func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
 	}
 
 	for _, couple := range s.CacheURL {
-		fmt.Println("я тута и у меня id - ", couple.UserID)
 		if couple.UserID == userID {
-			fmt.Println("есть сходство - ", couple.UserID)
 			coupleList = append(coupleList, &model.UserURLResponse{
 				OriginalURL: couple.OriginalURL,
 				ShortURL:    couple.Alias,
@@ -135,7 +133,7 @@ func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
 			})
 		}
 		if len(list) == 0 {
-			return nil, echo.NewHTTPError(http.StatusNoContent, fmt.Errorf("не нашли у пользователя URL"))
+			return []*model.UserURLResponse{}, nil
 		}
 		return coupleList, nil
 	}

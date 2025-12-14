@@ -59,7 +59,7 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 
 	// Проверяем, что Content-Type равен "text/plain"
 	if contentType != "application/json" {
-		return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
+		return ctx.JSON(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
 	}
 
 	defer ctx.Request().Body.Close()
@@ -124,9 +124,15 @@ func (h *Handlers) getMyShortURL(ctx echo.Context) error {
 
 	userID, err := h.Short.GetUserURL(ctx)
 	if err != nil {
+		if he, ok := err.(*echo.HTTPError); ok {
+			return he
+		}
 		h.Short.Logger.Error("Ошибка при работе с телом запроса: " + err.Error())
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, "internal error")
 		//return ctx.JSON(http.StatusNoContent, err.Error())
+	}
+	if len(userID) == 0 {
+		return ctx.NoContent(http.StatusNoContent)
 	}
 	h.Short.Logger.Info("Возвращаем список URL: ", userID)
 	return ctx.JSON(http.StatusOK, userID)
