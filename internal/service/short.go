@@ -16,7 +16,7 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/repository"
 )
 
-const defaultParamDelete = 30 // дефолтный параметр на запуска процесса уадаления
+const defaultParamDelete = 20 // дефолтный параметр на запуска процесса уадаления
 
 type Short struct {
 	Logger      *logrus.Logger
