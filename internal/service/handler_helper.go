@@ -140,13 +140,13 @@ func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
 	return coupleList, nil
 }
 
-func (s *Short) DeleteUserURL(ctx echo.Context, deleteList []string) {
+func (s *Short) DeleteUserURL(ctx echo.Context, deleteList []string) error {
 	userID, err := s.GetUserID(ctx)
 	if err != nil {
 		s.Logger.Error("ошибка - не удалось найти пользователя - ", err.Error())
 		//return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
-	list := []string{}
+	listDel := []string{}
 
 	for _, couple := range s.CacheURL {
 		for _, del := range deleteList {
@@ -156,16 +156,40 @@ func (s *Short) DeleteUserURL(ctx echo.Context, deleteList []string) {
 						continue
 					}
 					couple.DeletedFlag = true
-					list = append(list, couple.Alias)
+					listDel = append(listDel, couple.Alias)
 				}
 
 			}
 		}
 	}
 
-	delStr := "'" + strings.Join(list, "','") + "'"
+	if len(listDel) == 0 { // в кеше пусто, смотримм в базе
+		list, err := s.Repo.GetUserURL(s.Ctx, userID)
+		if err != nil {
+			return err
+		}
+		for _, couple := range list {
+			for _, del := range deleteList {
+				if couple.Alias == del { // если нашли в базе
+					if couple.DeletedFlag { // если тру идем на некст итерацию
+						continue
+					}
+					couple.DeletedFlag = true
+					listDel = append(listDel, couple.Alias)
+
+				}
+			}
+		}
+
+	}
+	if len(listDel) == 0 {
+		return fmt.Errorf("ошибка: не найден ни один url")
+	}
+	delStr := "'" + strings.Join(listDel, "','") + "'"
 	err = s.Repo.DeleteURL(s.Ctx, delStr)
 	if err != nil {
-		s.Logger.Error("ошибка - не удалось удалить URL - ", err.Error())
+		s.Logger.Error("ошибка - не удалось пометить URL на удаление - ", err.Error())
+		return err
 	}
+	return nil
 }

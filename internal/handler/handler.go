@@ -37,13 +37,14 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 	h.Short.Logger.Info("getRedirectHandler.info - полученный алиас: " + alias)
 	// Извлекаем алиас
 	originalURL, err := h.Short.GetAliasName(alias)
-	fmt.Println("че тут", originalURL)
 	if err != nil {
-		fmt.Println("3")
 		h.Short.Logger.Error("getRedirectHandler.err - возникла ошбка при получениии оригинального URL: " + err.Error())
+		if strings.Contains(err.Error(), "url deleted") {
+			return ctx.NoContent(http.StatusGone)
+			//return ctx.JSON(http.StatusGone, err.Error())
+		}
 		return ctx.JSON(http.StatusNotFound, err.Error())
 	}
-	fmt.Println("originalURL тут -", originalURL)
 	h.Short.Logger.Info("HTTP.Response - возвращаем полный URL по алиасу: " + alias + " - " + originalURL)
 	ctx.Redirect(http.StatusTemporaryRedirect, originalURL)
 	for key, values := range ctx.Response().Header() {
@@ -70,7 +71,6 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 	if err != nil {
 		res.ErrMsg = err.Error()
 		if strings.HasPrefix(res.ErrMsg, model.ERRCONFLICT) {
-			//parts := strings.Split(err.Error(), "-")
 			return ctx.JSON(http.StatusConflict, res)
 		}
 		return ctx.JSON(http.StatusInternalServerError, res)
@@ -115,14 +115,6 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 }
 
 func (h *Handlers) getMyShortURL(ctx echo.Context) error {
-	// Получаем значение заголовка Content-Type
-	//contentType := ctx.Request().Header.Get("Content-Type")
-	//
-	//// Проверяем, что Content-Type равен "application/json"
-	//if contentType != "application/json" {
-	//	return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
-	//}
-	//defer ctx.Request().Body.Close()
 
 	userID, err := h.Short.GetUserURL(ctx)
 	if err != nil {
@@ -142,21 +134,17 @@ func (h *Handlers) getMyShortURL(ctx echo.Context) error {
 }
 
 func (h *Handlers) deleteURL(ctx echo.Context) error {
-	// Получаем значение заголовка Content-Type
-	//contentType := ctx.Request().Header.Get("Content-Type")
-	//
-	//// Проверяем, что Content-Type равен "application/json"
-	//if contentType != "application/json" {
-	//	return ctx.String(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
-	//}
-	//defer ctx.Request().Body.Close()
 
 	deleteList := []string{}
 	if err := ctx.Bind(&deleteList); err != nil {
 		h.Short.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, "error:"+err.Error())
 	}
-	h.Short.DeleteUserURL(ctx, deleteList)
+	err := h.Short.DeleteUserURL(ctx, deleteList)
+	if err != nil {
+		h.Short.Logger.Error("Ошибка при отметке url на удаление: " + err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 
-	return ctx.JSON(http.StatusAccepted, "")
+	return ctx.NoContent(http.StatusAccepted)
 }

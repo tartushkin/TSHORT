@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
@@ -14,6 +15,8 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/model"
 	"github.com/tartushkin/TSHORT.git/internal/repository"
 )
+
+const defaultParamDelete = 2 // дефолтный параметр на запуска процесса уадаления
 
 type Short struct {
 	Logger      *logrus.Logger
@@ -27,6 +30,8 @@ type Short struct {
 	conn        *sql.DB
 	Repo        *repository.Repo
 	mu          sync.RWMutex
+
+	paramDelete time.Duration
 }
 
 // NewShort - заполнение структуры приложения
@@ -59,8 +64,12 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		}
 
 	}
+	sh.paramDelete = defaultParamDelete * time.Minute
+	if cfg.ParamDelete != 0 {
+		sh.paramDelete = time.Duration(cfg.ParamDelete) * time.Minute
+	}
 	sh.Address = cfg.Address
-
+	go sh.StartCleanup(ctx, sh.paramDelete)
 	//err := sh.LoadStorageURL() //подгрузка кеша
 	//if err != nil {
 	//	return nil, err
@@ -129,4 +138,26 @@ func (s *Short) LoadStorageURL() error {
 
 	return nil
 
+}
+
+func (s *Short) StartCleanup(ctx context.Context, param time.Duration) {
+	ticker := time.NewTicker(time.Second)
+	s.Logger.Info("StartCleanup.start - старт процесса очистки помеченных на удаления URL")
+	for {
+		s.Logger.Info("StartCleanup.wait - ожидание новой итерации очистки")
+		select {
+		case <-ctx.Done():
+			s.Logger.Info("StartCleanup.cancel - контекст процесса был завршен")
+			ticker.Stop()
+			return
+		case <-ticker.C:
+			ticker.Reset(param)
+			err := s.DeleteMarkedURLs(ctx)
+			if err != nil {
+				s.Logger.Error("Ошибка при удалении помеченных URL: " + err.Error())
+				continue
+			}
+			s.Logger.Info("StartCleanup.complete - успешная очистка помеченных на удаления URL")
+		}
+	}
 }

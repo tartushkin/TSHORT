@@ -77,15 +77,16 @@ func (r *Repo) DeleteURL(ctx context.Context, delStr string) error {
 	return nil
 }
 
-func (r *Repo) GetOriginalURL(ctx context.Context, alias string) (string, error) {
+func (r *Repo) GetOriginalURL(ctx context.Context, alias string) (*model.AliasFullCore, error) {
 	fmt.Println("1")
-	var original string
-	err := r.conn.QueryRowContext(ctx, `SELECT s_full FROM t_short.t_list WHERE s_alias = $1`, alias).Scan(&original)
+	//var original string
+	var coupe model.AliasFullCore
+	err := r.conn.QueryRowContext(ctx, `SELECT s_full, b_is_deleted FROM t_short.t_list WHERE s_alias = $1`, alias).Scan(&coupe.OriginalURL, &coupe.DeletedFlag)
 	if err != nil {
 		fmt.Println("2 -" + err.Error())
-		return "", err
+		return nil, err
 	}
-	return original, nil
+	return &coupe, nil
 }
 
 func (r *Repo) GetUserURL(ctx context.Context, userID string) ([]*model.AliasFullCore, error) {
@@ -107,4 +108,13 @@ func (r *Repo) GetUserURL(ctx context.Context, userID string) ([]*model.AliasFul
 	}
 
 	return list, nil
+}
+
+func (r *Repo) DeleteMarkedURLs(ctx context.Context) error {
+	_, err := r.conn.ExecContext(ctx, `delete from t_short.t_list where b_is_deleted = true`)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

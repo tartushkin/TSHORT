@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -23,18 +24,25 @@ func (s *Short) getFull(alias string) string {
 
 // GetAliasName - получение оригинального url
 func (s *Short) GetAliasName(aliasURL string) (string, error) {
+	var couple *model.AliasFullCore
 	s.mu.RLock()
-	coupe, ok := s.CacheURL[aliasURL]
+	couple, ok := s.CacheURL[aliasURL]
 	s.mu.RUnlock()
+
 	if !ok {
-		orig, err := s.Repo.GetOriginalURL(s.Ctx, aliasURL)
+		var err error
+		couple, err = s.Repo.GetOriginalURL(s.Ctx, aliasURL)
 		if err != nil {
 			return "", fmt.Errorf("не удалось найти оригинальный url по сокращенному: "+aliasURL+". ERR - %s", err.Error())
 		}
-		return orig, nil
 	}
-
-	return coupe.OriginalURL, nil
+	fmt.Println("1")
+	if couple.DeletedFlag {
+		fmt.Println("2")
+		return "", fmt.Errorf("URL помечен на удаление: %s", aliasURL)
+	}
+	fmt.Println("3")
+	return couple.OriginalURL, nil
 }
 
 func (s *Short) write(event *model.AliasFullCore) error {
@@ -121,4 +129,20 @@ func (s *Short) getUUID() string {
 
 	aliasURL = aliasURL[:8]
 	return aliasURL
+}
+
+func (s *Short) DeleteMarkedURLs(ctx context.Context) error {
+
+	err := s.Repo.DeleteMarkedURLs(ctx)
+	if err != nil {
+		return err
+	}
+	s.Logger.Info("DeleteMarkedURLs.complete - успешное удаление URL из БД")
+	for _, couple := range s.CacheURL {
+		if couple.DeletedFlag {
+			delete(s.CacheURL, couple.Alias)
+		}
+	}
+	s.Logger.Info("DeleteMarkedURLs.complete - успешное удаление URL из кеша")
+	return nil
 }
