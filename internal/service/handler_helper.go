@@ -129,7 +129,7 @@ func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
 		for _, couple := range list {
 			coupleList = append(coupleList, &model.UserURLResponse{
 				OriginalURL: couple.OriginalURL,
-				ShortURL:    couple.Alias,
+				ShortURL:    fmt.Sprintf("%s/%s", s.Address, couple.Alias),
 			})
 		}
 		if len(list) == 0 {
