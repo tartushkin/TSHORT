@@ -31,7 +31,8 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 	alias := ctx.Param("id")
 	if alias == "" {
 		fmt.Println("1")
-		return ctx.String(http.StatusBadRequest, "Требуется алиас")
+		h.Short.Logger.Error("getRedirectHandler.err - отсутствует алиас")
+		return ctx.JSON(http.StatusBadRequest, "Требуется алиас")
 	}
 	fmt.Println("2")
 	// Извлекаем алиас
@@ -39,7 +40,8 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 	fmt.Println("че тут", originalURL)
 	if err != nil {
 		fmt.Println("3")
-		return ctx.String(http.StatusNotFound, err.Error())
+		h.Short.Logger.Error("getRedirectHandler.err - возникла ошбка при получениии оригинального URL: " + err.Error())
+		return ctx.JSON(http.StatusNotFound, err.Error())
 	}
 	fmt.Println("originalURL тут -", originalURL)
 	h.Short.Logger.Info("HTTP.Response - возвращаем полный URL по алиасу: " + alias + " - " + originalURL)
