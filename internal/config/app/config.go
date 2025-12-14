@@ -20,7 +20,7 @@ func NewConfig() *Config {
 	flag.StringVar(&cfg.Address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&cfg.FileStoragePath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
 	flag.StringVar(&cfg.DNS, "d", "postgres://postgres:12345678@localhost:5432/myDB?sslmode=disable", "cтрока с адресом подключения к БД")
-	flag.IntVar(&cfg.ParamDelete, "t", 3, "частота запуска очистки от помеченных на удаление URL")
+	flag.IntVar(&cfg.ParamDelete, "t", 30, "частота запуска очистки от помеченных на удаление URL")
 
 	flag.Parse()
 

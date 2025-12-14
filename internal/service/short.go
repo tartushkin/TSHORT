@@ -16,7 +16,7 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/repository"
 )
 
-const defaultParamDelete = 2 // дефолтный параметр на запуска процесса уадаления
+const defaultParamDelete = 30 // дефолтный параметр на запуска процесса уадаления
 
 type Short struct {
 	Logger      *logrus.Logger
@@ -64,9 +64,9 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		}
 
 	}
-	sh.paramDelete = defaultParamDelete * time.Minute
+	sh.paramDelete = defaultParamDelete * time.Second
 	if cfg.ParamDelete != 0 {
-		sh.paramDelete = time.Duration(cfg.ParamDelete) * time.Minute
+		sh.paramDelete = time.Duration(cfg.ParamDelete) * time.Second
 	}
 	sh.Address = cfg.Address
 	go sh.StartCleanup(ctx, sh.paramDelete)

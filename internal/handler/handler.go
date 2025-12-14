@@ -39,7 +39,7 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 	originalURL, err := h.Short.GetAliasName(alias)
 	if err != nil {
 		h.Short.Logger.Error("getRedirectHandler.err - возникла ошбка при получениии оригинального URL: " + err.Error())
-		if strings.Contains(err.Error(), "url deleted") {
+		if strings.Contains(err.Error(), "URL deleted") {
 			return ctx.NoContent(http.StatusGone)
 			//return ctx.JSON(http.StatusGone, err.Error())
 		}
