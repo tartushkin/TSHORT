@@ -117,7 +117,7 @@ func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
 		if couple.UserID == userID {
 			coupleList = append(coupleList, &model.UserURLResponse{
 				OriginalURL: couple.OriginalURL,
-				ShortURL:    couple.Alias,
+				ShortURL:    fmt.Sprintf("%s/%s", s.Address, couple.Alias),
 			})
 		}
 	}
