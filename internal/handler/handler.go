@@ -34,7 +34,7 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 		h.Short.Logger.Error("getRedirectHandler.err - отсутствует алиас")
 		return ctx.JSON(http.StatusBadRequest, "Требуется алиас")
 	}
-	fmt.Println("2")
+	h.Short.Logger.Info("getRedirectHandler.info - полученный алиас: " + alias)
 	// Извлекаем алиас
 	originalURL, err := h.Short.GetAliasName(alias)
 	fmt.Println("че тут", originalURL)

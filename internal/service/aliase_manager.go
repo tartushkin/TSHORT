@@ -29,7 +29,7 @@ func (s *Short) GetAliasName(aliasURL string) (string, error) {
 	if !ok {
 		orig, err := s.Repo.GetOriginalURL(s.Ctx, aliasURL)
 		if err != nil {
-			return "", fmt.Errorf("не удалось найти оригинальный url по сокращенному: %s", aliasURL)
+			return "", fmt.Errorf("не удалось найти оригинальный url по сокращенному: "+aliasURL+". ERR - %s", err.Error)
 		}
 		return orig, nil
 	}
