@@ -153,7 +153,7 @@ func (h *Handlers) getMyShortURL(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "internal error")
 		//return ctx.JSON(http.StatusNoContent, err.Error())
 	}
-	if len(userID) == 0 {
+	if len(userIDList) == 0 {
 		return ctx.NoContent(http.StatusNoContent)
 	}
 	h.Short.Logger.Info("Возвращаем список URL: ", userID)
