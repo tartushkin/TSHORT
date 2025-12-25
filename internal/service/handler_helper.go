@@ -3,16 +3,12 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"strings"
 
-	"github.com/labstack/echo/v4"
 	"github.com/tartushkin/TSHORT.git/internal/model"
 )
 
-func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchResponse, error) {
-	list, err := s.getBody(ctx, req) // получаем тело запроса
+func (s *Short) ReaderBody(body []byte, userID, req string) ([]*model.BranchResponse, error) {
+	list, err := s.checkBody(body, userID, req) // получаем тело запроса
 	if err != nil {
 		return nil, err
 	}
@@ -50,26 +46,26 @@ func (s *Short) ReaderBody(ctx echo.Context, req string) ([]*model.BranchRespons
 	return responseList, nil
 }
 
-func (s *Short) getBody(ctx echo.Context, req string) ([]*model.AliasFullCore, error) {
+func (s *Short) checkBody(body []byte, userID, req string) ([]*model.AliasFullCore, error) {
 
 	s.Logger.Info("ReaderBody.start - чтение тела запроса")
-	userID, err := s.GetUserID(ctx)
-	if err != nil {
-		return nil, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-	}
-	body, err := io.ReadAll(ctx.Request().Body)
-	if err != nil {
-		s.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
-		return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
+	//userID, err := s.GetUserID(ctx)
+	//if err != nil {
+	//	return nil, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+	//}
+	//body, err := io.ReadAll(ctx.Request().Body)
+	//if err != nil {
+	//	s.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
+	//	return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	//}
 
 	coupleList := []*model.AliasFullCore{}
 	var couple *model.PostURLHandlerRequest
-	defer ctx.Request().Body.Close()
+	//defer ctx.Request().Body.Close()
 
 	switch req {
 	case model.One:
-		err = json.Unmarshal(body, &couple)
+		err := json.Unmarshal(body, &couple)
 		if err != nil {
 			errMsg := fmt.Errorf("возникла ошибка при чтении тела запроса: %w", err)
 			return nil, errMsg
@@ -82,7 +78,7 @@ func (s *Short) getBody(ctx echo.Context, req string) ([]*model.AliasFullCore, e
 	case model.List:
 		s.Logger.Info("ReaderBody.JSON - чтение jsonList запроса")
 
-		err = json.Unmarshal(body, &coupleList)
+		err := json.Unmarshal(body, &coupleList)
 		if err != nil {
 			errMsg := fmt.Errorf("возникла ошибка при чтении тела запроса: %w", err)
 			return nil, errMsg
@@ -105,13 +101,8 @@ func (s *Short) getBody(ctx echo.Context, req string) ([]*model.AliasFullCore, e
 	return coupleList, nil
 }
 
-func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
+func (s *Short) GetUserURL(userID string) ([]*model.UserURLResponse, error) {
 	coupleList := []*model.UserURLResponse{}
-
-	userID, err := s.GetUserID(ctx)
-	if err != nil {
-		return nil, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-	}
 
 	for _, couple := range s.CacheURL {
 		if couple.UserID == userID {
@@ -140,12 +131,7 @@ func (s *Short) GetUserURL(ctx echo.Context) ([]*model.UserURLResponse, error) {
 	return coupleList, nil
 }
 
-func (s *Short) DeleteUserURL(ctx echo.Context, deleteList []string) error {
-	userID, err := s.GetUserID(ctx)
-	if err != nil {
-		s.Logger.Error("ошибка - не удалось найти пользователя - ", err.Error())
-		//return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-	}
+func (s *Short) DeleteUserURL(userID string, deleteList []string) error {
 	listDel := []string{}
 
 	for _, couple := range s.CacheURL {
@@ -185,8 +171,7 @@ func (s *Short) DeleteUserURL(ctx echo.Context, deleteList []string) error {
 	if len(listDel) == 0 {
 		return fmt.Errorf("ошибка: не найден ни один url")
 	}
-	delStr := "'" + strings.Join(listDel, "','") + "'"
-	err = s.Repo.DeleteURL(s.Ctx, delStr)
+	err := s.Repo.DeleteURL(s.Ctx, listDel)
 	if err != nil {
 		s.Logger.Error("ошибка - не удалось пометить URL на удаление - ", err.Error())
 		return err

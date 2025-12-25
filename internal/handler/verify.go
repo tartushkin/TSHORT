@@ -13,14 +13,8 @@ import (
 
 const secretKey = "tort-secret-key"
 
-func cookieMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+func (h *Handlers) cookieMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		//if c.Request().URL.Path == "/" || c.Request().URL.Path == "/ping" || c.Request().URL.Path == "/api/shorten" {
-		//	return next(c)
-		//}
-		//if c.Request().URL.Path != "/api/user/urls" && c.Request().URL.Path != "/api/shorten/batch" { //
-		//	return next(c)
-		//}
 		cookie, err := c.Cookie("user_id")
 
 		var userID string
@@ -47,7 +41,7 @@ func cookieMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		// Устанавливаем новую куку
-		signedID := signID(userID)
+		signedID := signID(userID, h.secret)
 		c.SetCookie(&http.Cookie{
 			Name:     "user_id",
 			Value:    signedID,
@@ -74,8 +68,8 @@ func generateUniqueID() (string, error) {
 }
 
 // signID - подписывает ID
-func signID(id string) string {
-	mac := hmac.New(sha256.New, []byte(secretKey))
+func signID(id, sk string) string {
+	mac := hmac.New(sha256.New, []byte(sk))
 	mac.Write([]byte(id))
 	expectedMAC := mac.Sum(nil)
 	return id + "." + hex.EncodeToString(expectedMAC)
@@ -98,19 +92,22 @@ func verifySignedID(signedID string) (string, bool) {
 }
 
 // getUserID - извлекает ID пользователя из куки
-//func getUserID(c echo.Context) (string, error) {
-//	cookie, err := c.Cookie("user_id")
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	// Разбиваем значение куки на части
-//	parts := strings.Split(cookie.Value, ".")
-//	if len(parts) != 2 {
-//		return "", err
-//	}
-//
-//	// Извлекаем user_id
-//	userID := parts[0]
-//	return userID, nil
-//}
+func (h *Handlers) getUserID(c echo.Context) (string, error) {
+	if userID, ok := c.Get("userID").(string); ok {
+		return userID, nil
+	}
+	cookie, err := c.Cookie("user_id")
+	if err != nil {
+		return "", err
+	}
+
+	// Разбиваем значение куки на части
+	parts := strings.Split(cookie.Value, ".")
+	if len(parts) != 2 {
+		return "", err
+	}
+
+	// Извлекаем user_id
+	userID := parts[0]
+	return userID, nil
+}

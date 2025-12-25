@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 	"github.com/tartushkin/TSHORT.git/internal/model"
 )
 
@@ -66,10 +66,9 @@ func (r *Repo) GetAlias(ctx context.Context, orig string) (string, error) {
 	return alias, nil
 }
 
-func (r *Repo) DeleteURL(ctx context.Context, delStr string) error {
-	query := "UPDATE t_short.t_list SET b_is_deleted = true WHERE s_alias IN (?)"
-	query = strings.Replace(query, "?", delStr, 1)
-	_, err := r.conn.ExecContext(ctx, query)
+func (r *Repo) DeleteURL(ctx context.Context, aliasList []string) error {
+	query := "UPDATE t_short.t_list SET b_is_deleted = true WHERE s_alias = ANY($1)"
+	_, err := r.conn.ExecContext(ctx, query, pq.Array(aliasList))
 	if err != nil {
 		return err
 	}
@@ -78,12 +77,9 @@ func (r *Repo) DeleteURL(ctx context.Context, delStr string) error {
 }
 
 func (r *Repo) GetOriginalURL(ctx context.Context, alias string) (*model.AliasFullCore, error) {
-	fmt.Println("1")
-	//var original string
 	var coupe model.AliasFullCore
 	err := r.conn.QueryRowContext(ctx, `SELECT s_full, b_is_deleted FROM t_short.t_list WHERE s_alias = $1`, alias).Scan(&coupe.OriginalURL, &coupe.DeletedFlag)
 	if err != nil {
-		fmt.Println("2 -" + err.Error())
 		return nil, err
 	}
 	return &coupe, nil

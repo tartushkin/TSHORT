@@ -11,6 +11,7 @@ type Config struct {
 	FileStoragePath string
 	DNS             string
 	ParamDelete     int
+	SecretKey       string
 }
 
 // NewConfig - создание конфигурации приложения
@@ -21,6 +22,7 @@ func NewConfig() *Config {
 	flag.StringVar(&cfg.FileStoragePath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
 	flag.StringVar(&cfg.DNS, "d", "postgres://postgres:12345678@localhost:5432/myDB?sslmode=disable", "cтрока с адресом подключения к БД")
 	flag.IntVar(&cfg.ParamDelete, "t", 20, "частота запуска очистки от помеченных на удаление URL")
+	flag.StringVar(&cfg.SecretKey, "k", "tort-secret-key", "ключ")
 
 	flag.Parse()
 

@@ -22,7 +22,7 @@ func main() {
 	defer sh.Close()
 
 	h := handler.NewHandlers(sh)
-	go h.StartHTTP(ctx, cfg.Port) // запуск сервера
+	go h.StartHTTP(ctx, cfg.Port, cfg.SecretKey) // запуск сервера
 	lg.Info("Listner: ", fmt.Sprintf("Запущен http слушатель на порту %s", cfg.Port))
 
 	go func() {

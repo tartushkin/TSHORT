@@ -36,12 +36,9 @@ func (s *Short) GetAliasName(aliasURL string) (string, error) {
 			return "", fmt.Errorf("не удалось найти оригинальный url по сокращенному: "+aliasURL+". ERR - %s", err.Error())
 		}
 	}
-	fmt.Println("1")
 	if couple.DeletedFlag {
-		fmt.Println("2")
 		return "", fmt.Errorf("URL deleted: %s", aliasURL)
 	}
-	fmt.Println("3")
 	return couple.OriginalURL, nil
 }
 

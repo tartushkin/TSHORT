@@ -1,25 +1,16 @@
 package service
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/labstack/echo/v4"
 )
 
 // getUserID - извлекает ID пользователя из куки
-func (s *Short) GetUserID(c echo.Context) (string, error) {
-
-	//if c.Request().URL.Path != "/api/user/urls" && c.Request().URL.Path != "/api/shorten/batch" {
-	//	fmt.Println("тута")
-	//	return "testID", nil
-	//}
+func (s *Short) GetUser(c echo.Context) (string, error) {
 	if userID, ok := c.Get("userID").(string); ok {
-		fmt.Println("тута1")
-		fmt.Println("userID", userID)
 		return userID, nil
 	}
-	fmt.Println("тута2")
 	cookie, err := c.Cookie("user_id")
 	if err != nil {
 		return "", err

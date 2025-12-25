@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -11,7 +10,16 @@ import (
 
 func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 	var shortURL string
-	list, err := h.Short.ReaderBody(ctx, model.Text)
+	body, err := h.getBody(ctx)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	userID, err := h.getUserID(ctx)
+	if err != nil {
+		h.Short.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
+		return ctx.String(http.StatusUnauthorized, err.Error())
+	}
+	list, err := h.Short.ReaderBody(body, userID, model.Text)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), model.ERRCONFLICT) {
 			parts := strings.Split(err.Error(), "-")
@@ -30,7 +38,6 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 	// Получаем URL из параметров запроса
 	alias := ctx.Param("id")
 	if alias == "" {
-		fmt.Println("1")
 		h.Short.Logger.Error("getRedirectHandler.err - отсутствует алиас")
 		return ctx.JSON(http.StatusBadRequest, "Требуется алиас")
 	}
@@ -64,10 +71,18 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 	if contentType != "application/json" {
 		return ctx.JSON(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
 	}
-
+	body, err := h.getBody(ctx)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	userID, err := h.getUserID(ctx)
+	if err != nil {
+		h.Short.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
+		return ctx.String(http.StatusUnauthorized, err.Error())
+	}
 	defer ctx.Request().Body.Close()
 	res := model.PostURLHandlerResponse{}
-	listURL, err := h.Short.ReaderBody(ctx, model.One)
+	listURL, err := h.Short.ReaderBody(body, userID, model.One)
 	if err != nil {
 		res.ErrMsg = err.Error()
 		if strings.HasPrefix(res.ErrMsg, model.ERRCONFLICT) {
@@ -100,9 +115,18 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 		h.Short.Logger.Error("Content-Type не соответсвует ожидаемому: application/json")
 		return ctx.JSON(http.StatusBadRequest, "Content-Type не соответсвует ожидаемому: application/json")
 	}
+	body, err := h.getBody(ctx)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	userID, err := h.getUserID(ctx)
+	if err != nil {
+		h.Short.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
+		return ctx.String(http.StatusUnauthorized, err.Error())
+	}
 	defer ctx.Request().Body.Close()
 
-	listURL, err := h.Short.ReaderBody(ctx, model.List)
+	listURL, err := h.Short.ReaderBody(body, userID, model.List)
 	if err != nil {
 		h.Short.Logger.Error("Ошибка при работе с телом запроса: " + err.Error())
 		if err.Error() == model.CONFLICT {
@@ -115,8 +139,12 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 }
 
 func (h *Handlers) getMyShortURL(ctx echo.Context) error {
-
-	userID, err := h.Short.GetUserURL(ctx)
+	userID, err := h.getUserID(ctx)
+	if err != nil {
+		h.Short.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
+		return ctx.String(http.StatusUnauthorized, err.Error())
+	}
+	userIDList, err := h.Short.GetUserURL(userID)
 	if err != nil {
 		if he, ok := err.(*echo.HTTPError); ok {
 			return he
@@ -129,7 +157,7 @@ func (h *Handlers) getMyShortURL(ctx echo.Context) error {
 		return ctx.NoContent(http.StatusNoContent)
 	}
 	h.Short.Logger.Info("Возвращаем список URL: ", userID)
-	return ctx.JSON(http.StatusOK, userID)
+	return ctx.JSON(http.StatusOK, userIDList)
 
 }
 
@@ -140,7 +168,12 @@ func (h *Handlers) deleteURL(ctx echo.Context) error {
 		h.Short.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, "error:"+err.Error())
 	}
-	err := h.Short.DeleteUserURL(ctx, deleteList)
+	userID, err := h.getUserID(ctx)
+	if err != nil {
+		h.Short.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
+		return ctx.String(http.StatusUnauthorized, err.Error())
+	}
+	err = h.Short.DeleteUserURL(userID, deleteList)
 	if err != nil {
 		h.Short.Logger.Error("Ошибка при отметке url на удаление: " + err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
