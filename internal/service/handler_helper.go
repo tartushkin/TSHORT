@@ -49,19 +49,9 @@ func (s *Short) ReaderBody(body []byte, userID, req string) ([]*model.BranchResp
 func (s *Short) checkBody(body []byte, userID, req string) ([]*model.AliasFullCore, error) {
 
 	s.Logger.Info("ReaderBody.start - чтение тела запроса")
-	//userID, err := s.GetUserID(ctx)
-	//if err != nil {
-	//	return nil, echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-	//}
-	//body, err := io.ReadAll(ctx.Request().Body)
-	//if err != nil {
-	//	s.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
-	//	return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	//}
 
 	coupleList := []*model.AliasFullCore{}
 	var couple *model.PostURLHandlerRequest
-	//defer ctx.Request().Body.Close()
 
 	switch req {
 	case model.One:
