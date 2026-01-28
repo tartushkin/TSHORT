@@ -9,10 +9,6 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/model"
 )
 
-const (
-	errConf = "23505"
-)
-
 // вставка новых ссылок
 func (r *Repo) InsertURLJson(ctx context.Context, list []byte) error {
 	_, err := r.conn.ExecContext(ctx, `SELECT t_short.insert_urls($1)`, list)
@@ -40,7 +36,7 @@ func (r *Repo) InsertURL(ctx context.Context, couple *model.AliasFullCore) error
 }
 
 func (r *Repo) GetURLList(ctx context.Context) ([]*model.AliasFullCore, error) {
-	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full FROM t_short.t_list`)
+	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full, s_user_id FROM t_short.t_list`)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +44,7 @@ func (r *Repo) GetURLList(ctx context.Context) ([]*model.AliasFullCore, error) {
 	list := []*model.AliasFullCore{}
 	for rows.Next() {
 		url := &model.AliasFullCore{}
-		if err := rows.Scan(&url.Alias, &url.OriginalURL); err != nil {
+		if err := rows.Scan(&url.Alias, &url.OriginalURL, &url.UserID); err != nil {
 			return nil, err
 		}
 		list = append(list, url)

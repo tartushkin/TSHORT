@@ -37,12 +37,16 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 	h.httpServer.Use(middleware.Logger()) //в билиотеке уже есть middleware для логирования запрсов
 	h.httpServer.Use(middleware.Recover())
 	h.httpServer.Use(GzipMiddleware)
+	h.httpServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return cookieMiddleware(next)
+	})
 
 	h.httpServer.POST("/", h.oldPostURLHandler)
 	h.httpServer.GET("/:id", h.getRedirectHandler)
 	h.httpServer.POST("/api/shorten", h.postURLHandler)
 	h.httpServer.GET("/ping", h.testConnectionDB)
 	h.httpServer.POST("/api/shorten/batch", h.batchHandler)
+	h.httpServer.POST("/api/user/urls", h.getMyShortURL)
 
 	h.httpServer.Logger.Fatal(h.httpServer.Start(httpPort))
 

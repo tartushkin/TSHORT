@@ -5,11 +5,12 @@ DECLARE
 BEGIN
     FOR item IN SELECT * FROM json_array_elements(json_data)
     LOOP
-        INSERT INTO t_short.t_list (n_corr_id, s_alias, s_full)
+        INSERT INTO t_short.t_list (n_corr_id, s_alias, s_full, s_user_id)
         VALUES (
-            CASE WHEN item->>'corr_id' IS NOT NULL AND item->>'corr_id' <> '' THEN item->>'corr_id' ELSE NULL END,
+            item->>'correlation_id',
             item->>'alias',
-            item->>'original'
+            item->>'original_url',
+            item->>'user_id'
         );
     END LOOP;
 END;

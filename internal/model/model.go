@@ -42,4 +42,10 @@ type AliasFullCore struct {
 	Alias       string `json:"alias"`
 	OriginalURL string `json:"original_url"`
 	CorrID      string `json:"correlation_id"`
+	UserID      string `json:"user_id"`
+}
+
+type UserURLResponse struct {
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
 }

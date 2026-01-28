@@ -1,0 +1,25 @@
+package service
+
+import (
+	"strings"
+
+	"github.com/labstack/echo/v4"
+)
+
+// getUserID - извлекает ID пользователя из куки
+func (s *Short) GetUserID(c echo.Context) (string, error) {
+	cookie, err := c.Cookie("user_id")
+	if err != nil {
+		return "", err
+	}
+
+	// Разбиваем значение куки на части
+	parts := strings.Split(cookie.Value, ".")
+	if len(parts) != 2 {
+		return "", err
+	}
+
+	// Извлекаем user_id
+	userID := parts[0]
+	return userID, nil
+}
