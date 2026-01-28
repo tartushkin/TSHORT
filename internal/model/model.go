@@ -9,6 +9,7 @@ const (
 	DATABASE    = "DB"
 	FILE        = "FILE"
 	List        = "list"
+	CACHE       = "cache"
 	One         = "one"
 	Text        = "text"
 	CONFLICT    = "данный URL"
@@ -17,7 +18,7 @@ const (
 )
 
 type PostURLHandlerRequest struct {
-	URL string
+	URL string `json:"url"`
 }
 type PostURLHandlerResponse struct {
 	ErrMsg string
@@ -43,6 +44,7 @@ type AliasFullCore struct {
 	OriginalURL string `json:"original_url"`
 	CorrID      string `json:"correlation_id"`
 	UserID      string `json:"user_id"`
+	DeletedFlag bool   `json:"is_deleted"`
 }
 
 type UserURLResponse struct {

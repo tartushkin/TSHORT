@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
@@ -14,6 +15,8 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/model"
 	"github.com/tartushkin/TSHORT.git/internal/repository"
 )
+
+const defaultParamDelete = 20 // дефолтный параметр на запуска процесса уадаления
 
 type Short struct {
 	Logger      *logrus.Logger
@@ -27,6 +30,8 @@ type Short struct {
 	conn        *sql.DB
 	Repo        *repository.Repo
 	mu          sync.RWMutex
+
+	paramDelete time.Duration
 }
 
 // NewShort - заполнение структуры приложения
@@ -34,33 +39,41 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 	cacheURL := map[string]*model.AliasFullCore{}
 
 	sh := &Short{
-		Logger:      lg,
-		Ctx:         ctx,
-		CacheURL:    cacheURL,
-		HTTPPort:    cfg.Port,
-		PathStorage: cfg.FileStoragePath,
-		DNS:         cfg.DNS,
+		Logger:   lg,
+		Ctx:      ctx,
+		CacheURL: cacheURL,
+		HTTPPort: cfg.Port,
 	}
-
-	sh.Address = cfg.Address
-	file, err := sh.NewFile()
-	if err != nil {
-		return nil, err
+	if cfg.FileStoragePath != "" {
+		sh.PathStorage = cfg.FileStoragePath
+		file, err := sh.NewFile()
+		if err != nil {
+			return nil, err
+		}
+		sh.File = file
 	}
-	sh.File = file
 	if cfg.DNS != "" {
 		conn, err := db.NewConnection(cfg.DNS)
 		if err != nil {
-			panic(err)
+			lg.Info("db: не удалось подключилиться к DB, используем другое хранилище")
+		} else {
+			sh.DNS = cfg.DNS
+			lg.Info("db: успешно подключились к DB")
+			sh.conn = conn
+			sh.Repo = repository.NewRepository(sh.conn)
 		}
-		lg.Info("db: успешно подключились к DB")
-		sh.conn = conn
-		sh.Repo = repository.NewRepository(sh.conn)
+
 	}
-	err = sh.LoadStorageURL() //подгрузка кеша
-	if err != nil {
-		return nil, err
+	sh.paramDelete = defaultParamDelete * time.Second
+	if cfg.ParamDelete != 0 {
+		sh.paramDelete = time.Duration(cfg.ParamDelete) * time.Second
 	}
+	sh.Address = cfg.Address
+	go sh.StartCleanup(ctx, sh.paramDelete)
+	//err := sh.LoadStorageURL() //подгрузка кеша
+	//if err != nil {
+	//	return nil, err
+	//}
 	return sh, nil
 }
 
@@ -92,16 +105,11 @@ func (s *Short) Close() {
 
 // LoadStorageURL - подгрузка в кеш
 func (s *Short) LoadStorageURL() error {
-	_, err := s.File.SURL.Seek(0, 0)
-	if err != nil {
-		s.Logger.Error("Ошибка перемещения указателя файла: ", err)
-		return err
-	}
 	sourse := s.checkSourse()
 
 	switch sourse {
 	case model.DATABASE:
-		list, err := s.Repo.GetURLList(s.Ctx)
+		list, err := s.Repo.LoadCache(s.Ctx)
 		if err != nil {
 			return err
 		}
@@ -110,6 +118,11 @@ func (s *Short) LoadStorageURL() error {
 			s.Logger.Info(fmt.Sprintf("Прочитано и подгружено из БД в кеш пара: key:%v, value:%v", line.Alias, line.OriginalURL))
 		}
 	case model.FILE:
+		_, err := s.File.SURL.Seek(0, 0)
+		if err != nil {
+			s.Logger.Error("Ошибка перемещения указателя файла: ", err)
+			return err
+		}
 		decoder := json.NewDecoder(s.File.SURL)
 		var line model.AliasFullCore
 		for decoder.More() {
@@ -125,4 +138,26 @@ func (s *Short) LoadStorageURL() error {
 
 	return nil
 
+}
+
+func (s *Short) StartCleanup(ctx context.Context, param time.Duration) {
+	ticker := time.NewTicker(param)
+	s.Logger.Info("StartCleanup.start - старт процесса очистки помеченных на удаления URL")
+	for {
+		s.Logger.Info("StartCleanup.wait - ожидание новой итерации очистки")
+		select {
+		case <-ctx.Done():
+			s.Logger.Info("StartCleanup.cancel - контекст процесса был завршен")
+			ticker.Stop()
+			return
+		case <-ticker.C:
+			ticker.Reset(param)
+			err := s.DeleteMarkedURLs(ctx)
+			if err != nil {
+				s.Logger.Error("Ошибка при удалении помеченных URL: " + err.Error())
+				continue
+			}
+			s.Logger.Info("StartCleanup.complete - успешная очистка помеченных на удаления URL")
+		}
+	}
 }

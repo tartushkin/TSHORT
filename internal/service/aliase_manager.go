@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -9,24 +10,36 @@ import (
 )
 
 // SetCouple - добавление пары сокращенный/оригинальный url в кеш
-func (s *Short) SetCouple(coupe *model.AliasFullCore) (string, error) {
+func (s *Short) setCouple(coupe *model.AliasFullCore) {
 	s.mu.RLock()
 	s.CacheURL[coupe.Alias] = coupe
 	s.mu.RUnlock()
-	URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias)
-	return URL, nil
+	//URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias) //URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias)
+}
+
+func (s *Short) getFull(alias string) string {
+	URL := fmt.Sprintf("%s/%s", s.Address, alias)
+	return URL
 }
 
 // GetAliasName - получение оригинального url
 func (s *Short) GetAliasName(aliasURL string) (string, error) {
+	var couple *model.AliasFullCore
 	s.mu.RLock()
-	coupe, ok := s.CacheURL[aliasURL]
+	couple, ok := s.CacheURL[aliasURL]
 	s.mu.RUnlock()
-	if !ok {
-		return "", fmt.Errorf("не удалось найти оригинальный url по сокращенному: %s", aliasURL)
-	}
 
-	return coupe.OriginalURL, nil
+	if !ok {
+		var err error
+		couple, err = s.Repo.GetOriginalURL(s.Ctx, aliasURL)
+		if err != nil {
+			return "", fmt.Errorf("не удалось найти оригинальный url по сокращенному: "+aliasURL+". ERR - %s", err.Error())
+		}
+	}
+	if couple.DeletedFlag {
+		return "", fmt.Errorf("URL deleted: %s", aliasURL)
+	}
+	return couple.OriginalURL, nil
 }
 
 func (s *Short) write(event *model.AliasFullCore) error {
@@ -38,30 +51,32 @@ func (s *Short) write(event *model.AliasFullCore) error {
 }
 
 // проверка наличия url в кеше
-func (s *Short) checkURL(outURL string) error {
+func (s *Short) checkURL(outURL string) (string, bool) {
 	for _, coupe := range s.CacheURL {
 		if coupe.OriginalURL == outURL {
-			return fmt.Errorf("данный URL - %s уже есть в кеше приложения по ключу: %s", outURL, coupe.Alias)
+			s.Logger.Info(fmt.Sprintf("данный URL - %s уже есть в кеше приложения по ключу: %s", outURL, coupe.Alias))
+			return coupe.Alias, true
 		}
 	}
-	return nil
+	return "", false
 }
 
 func (s *Short) checkSourse() string {
-	if s.DNS != "" {
+	if s.conn != nil {
 		return model.DATABASE
 	}
-	return model.FILE
+	if s.File != nil {
+		return model.FILE
+	}
+	return model.CACHE
 }
 
 func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 	sourse := s.checkSourse()
-
 	switch sourse {
 	case model.DATABASE:
 		s.Logger.Info("insertURL - хранилище для данных: " + model.DATABASE)
 		if req == model.Text || req == model.One {
-			fmt.Println("а чего это пусто то,", listURL)
 			couple := listURL[0]
 			err := s.Repo.InsertURL(s.Ctx, couple)
 			if err != nil {
@@ -70,7 +85,9 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 					if err != nil {
 						return err
 					}
-					return fmt.Errorf("данный URL - %v уже есть в БД приложения по ключу: %v", couple.OriginalURL, alias)
+					errMsg := fmt.Errorf("%s -%s/%s", model.ERRCONFLICT, s.Address, alias)
+					s.Logger.Error(fmt.Errorf("%s - данный URL - %v уже есть в БД приложения по ключу: %v", model.ERRCONFLICT, couple.OriginalURL, alias))
+					return errMsg
 				}
 				return fmt.Errorf("возникла ошибка: %w при записи в БД новую пару URL", err)
 			}
@@ -92,8 +109,14 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 			if err != nil {
 				return fmt.Errorf("возникла ошибка: %w при записи в файл новую пару URL", err)
 			}
+			s.setCouple(couple)
 		}
-
+	case model.CACHE:
+		s.Logger.Info("insertURL - хранилище для данных: " + model.CACHE)
+		for _, couple := range listURL {
+			s.Logger.Info(fmt.Sprintf("insertURL - запись в кеш: %v  ", couple))
+			s.setCouple(couple)
+		}
 	}
 	return nil
 }
@@ -103,4 +126,20 @@ func (s *Short) getUUID() string {
 
 	aliasURL = aliasURL[:8]
 	return aliasURL
+}
+
+func (s *Short) DeleteMarkedURLs(ctx context.Context) error {
+
+	err := s.Repo.DeleteMarkedURLs(ctx)
+	if err != nil {
+		return err
+	}
+	s.Logger.Info("DeleteMarkedURLs.complete - успешное удаление URL из БД")
+	for _, couple := range s.CacheURL {
+		if couple.DeletedFlag {
+			delete(s.CacheURL, couple.Alias)
+		}
+	}
+	s.Logger.Info("DeleteMarkedURLs.complete - успешное удаление URL из кеша")
+	return nil
 }

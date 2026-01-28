@@ -3,6 +3,7 @@ package handler
 import (
 	"compress/gzip"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -16,6 +17,7 @@ import (
 type Handlers struct {
 	Short      *service.Short // внутриняя логика приложения
 	httpServer *echo.Echo
+	secret     string
 }
 
 type compressWriter struct {
@@ -32,23 +34,47 @@ func NewHandlers(short *service.Short) *Handlers {
 }
 
 // StartHTTP - инициализация и запуск сервера
-func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
+func (h *Handlers) StartHTTP(ctx context.Context, httpPort, sk string) error {
+	h.secret = sk
 	h.httpServer = echo.New()
 	h.httpServer.Use(middleware.Logger()) //в билиотеке уже есть middleware для логирования запрсов
 	h.httpServer.Use(middleware.Recover())
 	h.httpServer.Use(GzipMiddleware)
 	h.httpServer.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return cookieMiddleware(next)
+		return h.cookieMiddleware(next)
 	})
+	h.httpServer.HTTPErrorHandler = func(err error, c echo.Context) {
+		// Логируем ошибку
+		c.Logger().Error(err)
+
+		// Определяем код и сообщение
+		code := http.StatusInternalServerError
+		message := "Internal Server Error"
+
+		if he, ok := err.(*echo.HTTPError); ok {
+			code = he.Code
+			message = fmt.Sprintf("%v", he.Message)
+		}
+
+		// Отправляем JSON
+		if !c.Response().Committed {
+			c.JSON(code, map[string]string{
+				"error": message,
+			})
+		}
+	}
 
 	h.httpServer.POST("/", h.oldPostURLHandler)
 	h.httpServer.GET("/:id", h.getRedirectHandler)
 	h.httpServer.POST("/api/shorten", h.postURLHandler)
 	h.httpServer.GET("/ping", h.testConnectionDB)
 	h.httpServer.POST("/api/shorten/batch", h.batchHandler)
-	h.httpServer.POST("/api/user/urls", h.getMyShortURL)
+	h.httpServer.GET("/api/user/urls", h.getMyShortURL)
+	h.httpServer.DELETE("/api/user/urls", h.deleteURL)
 
-	h.httpServer.Logger.Fatal(h.httpServer.Start(httpPort))
+	if err := h.httpServer.Start(httpPort); err != nil && err != http.ErrServerClosed {
+		h.httpServer.Logger.Info("Сервер остановлен: %v", err)
+	}
 
 	return nil
 }
@@ -57,7 +83,6 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort string) error {
 func (h *Handlers) StopHTTP(ctx context.Context) {
 	h.httpServer.Shutdown(ctx)
 }
-
 func GzipMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// Проверяем, что клиент поддерживает сжатие ответа
@@ -140,4 +165,13 @@ func (c *compressReader) Close() error {
 		return err
 	}
 	return c.zr.Close()
+}
+
+func (h *Handlers) getBody(ctx echo.Context) ([]byte, error) {
+	body, err := io.ReadAll(ctx.Request().Body)
+	if err != nil {
+		h.Short.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
+		return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	return body, nil
 }

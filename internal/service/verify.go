@@ -7,7 +7,10 @@ import (
 )
 
 // getUserID - извлекает ID пользователя из куки
-func (s *Short) GetUserID(c echo.Context) (string, error) {
+func (s *Short) GetUser(c echo.Context) (string, error) {
+	if userID, ok := c.Get("userID").(string); ok {
+		return userID, nil
+	}
 	cookie, err := c.Cookie("user_id")
 	if err != nil {
 		return "", err

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 	"github.com/tartushkin/TSHORT.git/internal/model"
 )
 
@@ -19,9 +20,9 @@ func (r *Repo) InsertURLJson(ctx context.Context, list []byte) error {
 }
 func (r *Repo) InsertURL(ctx context.Context, couple *model.AliasFullCore) error {
 	_, err := r.conn.ExecContext(ctx, `
-	INSERT INTO t_short.t_list(s_alias, s_full)
-	VALUES ($1,$2);
-	`, couple.Alias, couple.OriginalURL)
+	INSERT INTO t_short.t_list(s_alias, s_full, n_corr_id, s_user_id)
+	VALUES ($1,$2,$3,$4);
+	`, couple.Alias, couple.OriginalURL, "-", couple.UserID)
 	if err != nil {
 		// Проверяем, является ли ошибка ошибкой уникальности
 		var pgErr *pgconn.PgError
@@ -35,8 +36,8 @@ func (r *Repo) InsertURL(ctx context.Context, couple *model.AliasFullCore) error
 	return nil
 }
 
-func (r *Repo) GetURLList(ctx context.Context) ([]*model.AliasFullCore, error) {
-	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full, s_user_id FROM t_short.t_list`)
+func (r *Repo) LoadCache(ctx context.Context) ([]*model.AliasFullCore, error) {
+	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full, s_user_id, b_is_deleted FROM t_short.t_list`)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +45,7 @@ func (r *Repo) GetURLList(ctx context.Context) ([]*model.AliasFullCore, error) {
 	list := []*model.AliasFullCore{}
 	for rows.Next() {
 		url := &model.AliasFullCore{}
-		if err := rows.Scan(&url.Alias, &url.OriginalURL, &url.UserID); err != nil {
+		if err := rows.Scan(&url.Alias, &url.OriginalURL, &url.UserID, &url.DeletedFlag); err != nil {
 			return nil, err
 		}
 		list = append(list, url)
@@ -63,4 +64,53 @@ func (r *Repo) GetAlias(ctx context.Context, orig string) (string, error) {
 		return "", err
 	}
 	return alias, nil
+}
+
+func (r *Repo) DeleteURL(ctx context.Context, aliasList []string) error {
+	query := "UPDATE t_short.t_list SET b_is_deleted = true WHERE s_alias = ANY($1)"
+	_, err := r.conn.ExecContext(ctx, query, pq.Array(aliasList))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repo) GetOriginalURL(ctx context.Context, alias string) (*model.AliasFullCore, error) {
+	var coupe model.AliasFullCore
+	err := r.conn.QueryRowContext(ctx, `SELECT s_full, b_is_deleted FROM t_short.t_list WHERE s_alias = $1`, alias).Scan(&coupe.OriginalURL, &coupe.DeletedFlag)
+	if err != nil {
+		return nil, err
+	}
+	return &coupe, nil
+}
+
+func (r *Repo) GetUserURL(ctx context.Context, userID string) ([]*model.AliasFullCore, error) {
+	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full, b_is_deleted FROM t_short.t_list WHERE s_user_id = $1`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	list := []*model.AliasFullCore{}
+	for rows.Next() {
+		url := &model.AliasFullCore{}
+		if err := rows.Scan(&url.Alias, &url.OriginalURL, &url.DeletedFlag); err != nil {
+			return nil, err
+		}
+		list = append(list, url)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
+
+func (r *Repo) DeleteMarkedURLs(ctx context.Context) error {
+	_, err := r.conn.ExecContext(ctx, `delete from t_short.t_list where b_is_deleted = true`)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
