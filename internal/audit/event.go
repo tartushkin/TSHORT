@@ -4,7 +4,7 @@ import "time"
 
 type Event struct {
 	TS     int64  `json:"ts"`      // Unix timestamp
-	Action string `json:"action"`  // shorten/follow
+	Action string `json:"action"`  // shorten/followw
 	UserID string `json:"user_id"` // может быть пустым
 	URL    string `json:"url"`     // оригинальный URL
 }
