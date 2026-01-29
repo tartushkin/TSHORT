@@ -57,6 +57,10 @@ func (l *RemoteLogger) Log(event Event) error {
 	if err != nil {
 		return err
 	}
-	_, err = l.client.Post(l.url, "application/json", bytes.NewBuffer(data))
-	return err
+	resp, err := l.client.Post(l.url, "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
 }
