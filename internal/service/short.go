@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+
+	"github.com/tartushkin/TSHORT.git/internal/audit"
 	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
 	"github.com/tartushkin/TSHORT.git/internal/config/db"
 	"github.com/tartushkin/TSHORT.git/internal/model"
@@ -19,19 +21,28 @@ import (
 const defaultParamDelete = 20 // дефолтный параметр на запуска процесса уадаления
 
 type Short struct {
-	Logger      *logrus.Logger
-	Ctx         context.Context
+	mu sync.RWMutex
+
+	Logger *logrus.Logger
+	Ctx    context.Context
+
+	CacheURL map[string]*model.AliasFullCore
+	conn     *sql.DB
+	Repo     *repository.Repo
+	client   *Client
+
 	HTTPPort    string
 	Address     string
 	PathStorage string
-	File        *model.FileStorage
-	DNS         string
-	CacheURL    map[string]*model.AliasFullCore
-	conn        *sql.DB
-	Repo        *repository.Repo
-	mu          sync.RWMutex
 
+	DNS         string
 	paramDelete time.Duration
+
+	auditLocal string
+	auditURL   string
+
+	FileStorage *model.FileStorage
+	Dis         *audit.Dispatcher
 }
 
 // NewShort - заполнение структуры приложения
@@ -43,15 +54,19 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		Ctx:      ctx,
 		CacheURL: cacheURL,
 		HTTPPort: cfg.Port,
+		Address:  cfg.Address,
+		Dis:      audit.NewDispatcher(),
 	}
+
 	if cfg.FileStoragePath != "" {
 		sh.PathStorage = cfg.FileStoragePath
-		file, err := sh.NewFile()
+		file, err := sh.NewFile(sh.PathStorage)
 		if err != nil {
 			return nil, err
 		}
-		sh.File = file
+		sh.FileStorage = file
 	}
+
 	if cfg.DNS != "" {
 		conn, err := db.NewConnection(cfg.DNS)
 		if err != nil {
@@ -64,22 +79,36 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		}
 
 	}
+
 	sh.paramDelete = defaultParamDelete * time.Second
 	if cfg.ParamDelete != 0 {
 		sh.paramDelete = time.Duration(cfg.ParamDelete) * time.Second
 	}
-	sh.Address = cfg.Address
+
+	if cfg.LocalAuditPath != "" {
+		sh.auditLocal = cfg.LocalAuditPath
+		file, err := audit.NewFileLogger(sh.auditLocal)
+		if err != nil {
+			lg.Error("create.audit - ошибка создания файла для аудита", err)
+		}
+		sh.Dis.AddLogger(file)
+	}
+	if cfg.AuditPath != "" {
+		sh.auditURL = cfg.AuditPath
+		au := audit.NewRemoteLogger(sh.auditURL)
+		sh.Dis.AddLogger(au)
+	}
+
+	cl := NewClient(sh.Address, sh.auditURL)
+	sh.client = cl
+
 	go sh.StartCleanup(ctx, sh.paramDelete)
-	//err := sh.LoadStorageURL() //подгрузка кеша
-	//if err != nil {
-	//	return nil, err
-	//}
 	return sh, nil
 }
 
 // NewFile - создание файла для хранения пар URL
-func (s *Short) NewFile() (*model.FileStorage, error) {
-	file, err := os.OpenFile(s.PathStorage, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+func (s *Short) NewFile(path string) (*model.FileStorage, error) {
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return nil, err
 	}
@@ -92,8 +121,8 @@ func (s *Short) NewFile() (*model.FileStorage, error) {
 
 // Close - закрытие файла
 func (s *Short) Close() {
-	if s.File != nil {
-		s.File.SURL.Close()
+	if s.FileStorage != nil {
+		s.FileStorage.SURL.Close()
 		s.Logger.Info("main: ", fmt.Sprintf("file - %s, успешно закрыт", s.PathStorage))
 	}
 	if s.conn != nil {
@@ -118,12 +147,12 @@ func (s *Short) LoadStorageURL() error {
 			s.Logger.Info(fmt.Sprintf("Прочитано и подгружено из БД в кеш пара: key:%v, value:%v", line.Alias, line.OriginalURL))
 		}
 	case model.FILE:
-		_, err := s.File.SURL.Seek(0, 0)
+		_, err := s.FileStorage.SURL.Seek(0, 0)
 		if err != nil {
 			s.Logger.Error("Ошибка перемещения указателя файла: ", err)
 			return err
 		}
-		decoder := json.NewDecoder(s.File.SURL)
+		decoder := json.NewDecoder(s.FileStorage.SURL)
 		var line model.AliasFullCore
 		for decoder.More() {
 			err := decoder.Decode(&line)

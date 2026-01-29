@@ -1,0 +1,8 @@
+{"ts":1769712913,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfilm17777.ru/"}
+{"ts":1769712971,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfilm17777888.ru/"}
+{"ts":1769712999,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfilm17777888ikkk.ru/"}
+{"ts":1769714039,"action":"shorten","user_id":"unknown","url":""}
+{"ts":1769714481,"action":"shorten","user_id":"unknown","url":"https://gb.lordfilm17t2ggg333136.ru"}
+{"ts":1769714593,"action":"shorten","user_id":"unknown","url":"https://gb.lordfilm17777l,mkm888ikkk.ru/"}
+{"ts":1769714644,"action":"shorten","user_id":"unknown","url":"https://gb.lordfilm17t2ggg33FF3136.ru"}
+{"ts":1769714782,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfilm17t2ggpjjg33FF3136.ru"}

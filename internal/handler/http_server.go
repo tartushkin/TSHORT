@@ -7,10 +7,12 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
+	"github.com/tartushkin/TSHORT.git/internal/audit"
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
@@ -64,9 +66,9 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort, sk string) error {
 		}
 	}
 
-	h.httpServer.POST("/", h.oldPostURLHandler)
-	h.httpServer.GET("/:id", h.getRedirectHandler)
-	h.httpServer.POST("/api/shorten", h.postURLHandler)
+	h.httpServer.POST("/", h.withAudit(h.oldPostURLHandler))
+	h.httpServer.GET("/:id", h.withAudit(h.getRedirectHandler))
+	h.httpServer.POST("/api/shorten", h.withAudit(h.postURLHandler))
 	h.httpServer.GET("/ping", h.testConnectionDB)
 	h.httpServer.POST("/api/shorten/batch", h.batchHandler)
 	h.httpServer.GET("/api/user/urls", h.getMyShortURL)
@@ -174,4 +176,46 @@ func (h *Handlers) getBody(ctx echo.Context) ([]byte, error) {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return body, nil
+}
+
+// Audit — middleware для аудита
+func (h *Handlers) Audit(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// Обработка запроса
+		err := next(c)
+
+		if c.Response().Status >= 200 && c.Response().Status < 300 {
+			var action string
+			switch c.Request().Method {
+			case "GET":
+				action = "follow"
+			case "POST":
+				action = "shorten"
+			}
+			originalURL, ok := c.Get("original_url").(string)
+			if !ok && originalURL == "" {
+				originalURL = "unknown"
+			}
+			userID, ok := c.Get("userID").(string)
+			if !ok {
+				userID = "unknown"
+			}
+
+			// Формируем событие аудита
+			event := audit.Event{
+				Ts:     time.Now().Unix(),
+				Action: action,
+				UserID: userID, // Предполагается, что user_id сохранён в контексте
+				URL:    originalURL,
+			}
+			go h.Short.Dis.Dispatch(event)
+
+		}
+
+		return err
+	}
+}
+
+func (h *Handlers) withAudit(handler echo.HandlerFunc) echo.HandlerFunc {
+	return h.Audit(handler)
 }
