@@ -22,12 +22,15 @@ func (s *Short) GetOriginalURL(shortURL string) string {
 	parts := strings.Split(shortURL, "/")
 	alias := parts[len(parts)-1]
 
-	org, err := s.Repo.GetOriginalURL(s.Ctx, alias)
-	if err != nil {
-		s.Logger.Info("GetOriginalURL.err - не удалось найтти оригинальный URL для - " + alias)
-		return ""
+	if s.Repo != nil {
+		org, err := s.Repo.GetOriginalURL(s.Ctx, alias)
+		if err != nil {
+			s.Logger.Info("GetOriginalURL.err - не удалось найтти оригинальный URL для - " + alias)
+			return ""
+		}
+		return org.OriginalURL
 	}
-	return org.OriginalURL
+	return ""
 }
 
 func (s *Short) getFull(alias string) string {
