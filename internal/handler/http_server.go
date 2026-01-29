@@ -203,7 +203,7 @@ func (h *Handlers) Audit(next echo.HandlerFunc) echo.HandlerFunc {
 
 			// Формируем событие аудита
 			event := audit.Event{
-				Ts:     time.Now().Unix(),
+				TS:     time.Now().Unix(),
 				Action: action,
 				UserID: userID, // Предполагается, что user_id сохранён в контексте
 				URL:    originalURL,
