@@ -208,7 +208,7 @@ func (h *Handlers) Audit(next echo.HandlerFunc) echo.HandlerFunc {
 				UserID: userID, // Предполагается, что user_id сохранён в контексте
 				URL:    originalURL,
 			}
-			go h.Short.Dis.Dispatch(event)
+			go h.Short.Dis.Dispatch(h.Short.Logger, event)
 
 		}
 

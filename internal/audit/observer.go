@@ -1,6 +1,8 @@
 package audit
 
-import "log"
+import (
+	"github.com/sirupsen/logrus"
+)
 
 type Dispatcher struct {
 	loggers []Logger
@@ -14,12 +16,12 @@ func (d *Dispatcher) AddLogger(logger Logger) {
 	d.loggers = append(d.loggers, logger)
 }
 
-func (d *Dispatcher) Dispatch(event Event) {
+func (d *Dispatcher) Dispatch(lg *logrus.Logger, event Event) {
 	for _, logger := range d.loggers {
 		go func(l Logger) {
 			if err := l.Log(event); err != nil {
 				// Логируем ошибку аудита (например, в stderr)
-				log.Printf("audit error: %v", err)
+				lg.Errorf("dispatch.err -  %v", err)
 			}
 		}(logger)
 	}
