@@ -25,6 +25,7 @@ func testCreate() *Handlers {
 		if db, exists := os.LookupEnv("DATABASE_DSN"); exists && db != "" {
 			DNS = db
 		}
+
 	}
 	if configPath == "" {
 		flag.StringVar(&configPath, "g", "./StorageURL.TXT", "путь для файла хранения URL")
