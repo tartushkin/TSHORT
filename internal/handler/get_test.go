@@ -6,6 +6,7 @@ import (
 	"flag"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -21,6 +22,9 @@ var DNS string
 func testCreate() *Handlers {
 	if DNS == "" {
 		flag.StringVar(&DNS, "d", "postgres://postgres:12345678@localhost:5432/myDB?sslmode=disable", "cтрока с адресом подключения к БД")
+		if db, exists := os.LookupEnv("DATABASE_DSN"); exists && db != "" {
+			DNS = db
+		}
 	}
 	if configPath == "" {
 		flag.StringVar(&configPath, "g", "./StorageURL.TXT", "путь для файла хранения URL")
