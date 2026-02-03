@@ -6,3 +6,13 @@
 {"ts":1769714593,"action":"shorten","user_id":"unknown","url":"https://gb.lordfilm17777l,mkm888ikkk.ru/"}
 {"ts":1769714644,"action":"shorten","user_id":"unknown","url":"https://gb.lordfilm17t2ggg33FF3136.ru"}
 {"ts":1769714782,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfilm17t2ggpjjg33FF3136.ru"}
+{"ts":1770058077,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfilm17t2ggpjjg33FF316.ru"}
+{"ts":1770059941,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfilm1716.ru"}
+{"ts":1770060339,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfilm17ж16.ru"}
+{"ts":1770061568,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfilm177ж16.ru"}
+{"ts":1770061744,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfilm17777l,hmkm888ikkk.ru/"}
+{"ts":1770061748,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfhilm177ж16.ru"}
+{"ts":1770138647,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfhilmg177ж16.ru"}
+{"ts":1770138651,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfilm17777gl,hmkm888ikkk.ru/"}
+{"ts":1770140219,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfhilmgf77ж16.ru"}
+{"ts":1770143407,"action":"shorten","user_id":"575de84d","url":"https://gb.lordfhilmgdf77ж16.ru"}

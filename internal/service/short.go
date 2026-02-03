@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
+	"runtime/pprof"
 	"sync"
 	"time"
 
@@ -27,9 +29,9 @@ type Short struct {
 	Ctx    context.Context
 
 	CacheURL map[string]*model.AliasFullCore
-	conn     *sql.DB
+	Conn     *sql.DB
 	Repo     *repository.Repo
-	client   *Client
+	//client   *Client
 
 	HTTPPort    string
 	Address     string
@@ -43,6 +45,10 @@ type Short struct {
 
 	FileStorage *model.FileStorage
 	Dis         *audit.Dispatcher
+	Fcpu        *os.File
+	Fmem        *os.File
+
+	RunProfile bool
 }
 
 // NewShort - заполнение структуры приложения
@@ -74,8 +80,8 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		} else {
 			sh.DNS = cfg.DNS
 			lg.Info("db: успешно подключились к DB")
-			sh.conn = conn
-			sh.Repo = repository.NewRepository(sh.conn)
+			sh.Conn = conn
+			sh.Repo = repository.NewRepository(sh.Conn)
 		}
 
 	}
@@ -99,9 +105,15 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		sh.Dis.AddLogger(au)
 	}
 
-	cl := NewClient(sh.Address, sh.auditURL)
-	sh.client = cl
+	//cl := NewClient(sh.Address, sh.auditURL) // а
+	//sh.client = cl
 
+	if cfg.RunProfile {
+		err := sh.CPUProfile()
+		if err != nil {
+			return nil, err
+		}
+	}
 	go sh.StartCleanup(ctx, sh.paramDelete)
 	return sh, nil
 }
@@ -125,8 +137,8 @@ func (s *Short) Close() {
 		s.FileStorage.SURL.Close()
 		s.Logger.Info("main: ", fmt.Sprintf("file - %s, успешно закрыт", s.PathStorage))
 	}
-	if s.conn != nil {
-		s.conn.Close()
+	if s.Conn != nil {
+		s.Conn.Close()
 		s.Logger.Info("main: соединение с БД закрыто")
 	}
 	s.Logger.Info("main: file - для закрытия отсутствует")
@@ -189,4 +201,33 @@ func (s *Short) StartCleanup(ctx context.Context, param time.Duration) {
 			s.Logger.Info("StartCleanup.complete - успешная очистка помеченных на удаления URL")
 		}
 	}
+}
+
+func (s *Short) CPUProfile() error {
+	fcpu, err := os.OpenFile("./profiles/result.pprof", os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	s.Fcpu = fcpu
+
+	if err := pprof.StartCPUProfile(fcpu); err != nil {
+		return err
+	}
+	s.Logger.Info("CPU профилирование запущено")
+	return nil
+}
+
+func (s *Short) MemProfile() error {
+	// создаём файл журнала профилирования памяти
+	fmem, err := os.OpenFile("./profiles/result.pprof", os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	s.Fmem = fmem
+	runtime.GC() // получаем статистику по использованию памяти
+	if err := pprof.WriteHeapProfile(fmem); err != nil {
+		return err
+	}
+	s.Logger.Info("Профили сохранены: cpu.pprof, base.pprof")
+	return nil
 }

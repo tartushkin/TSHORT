@@ -74,10 +74,18 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort, sk string) error {
 	h.httpServer.GET("/api/user/urls", h.getMyShortURL)
 	h.httpServer.DELETE("/api/user/urls", h.deleteURL)
 
-	if err := h.httpServer.Start(httpPort); err != nil && err != http.ErrServerClosed {
-		h.httpServer.Logger.Info("Сервер остановлен: %v", err)
-	}
+	//if err := h.httpServer.Start(httpPort); err != nil && err != http.ErrServerClosed {
+	//	h.httpServer.Logger.Info("Сервер остановлен: %v", err)
+	//}
+	go func() {
+		<-ctx.Done()
+		h.Short.Logger.Info("Контекст завершен")
+		h.StopHTTP(ctx)
+	}()
 
+	if err := h.httpServer.Start(httpPort); err != nil && err != http.ErrServerClosed {
+		h.Short.Logger.Error("HTTP сервер завершился с ошибкой", "error", err)
+	}
 	return nil
 }
 

@@ -78,7 +78,7 @@ func (s *Short) checkURL(outURL string) (string, bool) {
 }
 
 func (s *Short) checkSourse() string {
-	if s.conn != nil {
+	if s.Conn != nil {
 		return model.DATABASE
 	}
 	if s.FileStorage != nil {
