@@ -21,7 +21,7 @@ import (
 )
 
 const defaultParamDelete = 20 // дефолтный параметр на запуска процесса уадаления
-
+// Short — основной сервис для работы с URL.
 type Short struct {
 	mu sync.RWMutex
 
@@ -51,7 +51,7 @@ type Short struct {
 	RunProfile bool
 }
 
-// NewShort - заполнение структуры приложения
+// NewShort - заполнение структуры приложения.
 func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, error) {
 	cacheURL := map[string]*model.AliasFullCore{}
 
@@ -104,9 +104,6 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		au := audit.NewRemoteLogger(sh.auditURL)
 		sh.Dis.AddLogger(au)
 	}
-
-	//cl := NewClient(sh.Address, sh.auditURL) // а
-	//sh.client = cl
 
 	if cfg.RunProfile {
 		err := sh.CPUProfile()
@@ -181,6 +178,7 @@ func (s *Short) LoadStorageURL() error {
 
 }
 
+// StartCleanup - процесс очистки помеченных на удаления URL
 func (s *Short) StartCleanup(ctx context.Context, param time.Duration) {
 	ticker := time.NewTicker(param)
 	s.Logger.Info("StartCleanup.start - старт процесса очистки помеченных на удаления URL")
@@ -203,6 +201,7 @@ func (s *Short) StartCleanup(ctx context.Context, param time.Duration) {
 	}
 }
 
+// CPUProfile -  профилирования CPU
 func (s *Short) CPUProfile() error {
 	fcpu, err := os.OpenFile("./profiles/result.pprof", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
@@ -217,6 +216,7 @@ func (s *Short) CPUProfile() error {
 	return nil
 }
 
+// MemProfile -  профилирования памяти
 func (s *Short) MemProfile() error {
 	// создаём файл журнала профилирования памяти
 	fmem, err := os.OpenFile("./profiles/result.pprof", os.O_RDWR|os.O_CREATE, 0666)

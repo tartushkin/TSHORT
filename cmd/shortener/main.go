@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"runtime/pprof"
 	"syscall"
-	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/sirupsen/logrus"
@@ -17,9 +16,24 @@ import (
 	sr "github.com/tartushkin/TSHORT.git/internal/service"
 )
 
+/*
+main запускает HTTP-сервер для сокращения URL.
+
+Программа:
+ 1. Инициализирует логгер, конфигурацию и сервис.
+ 2. Запускает HTTP-сервер в отдельной горутине.
+ 3. Ожидает сигнала завершения (Ctrl+C, SIGTERM).
+ 4. При получении сигнала — корректно останавливается.
+ 5. Если включено профилирование (RunProfile), останавливает CPU- и memory-профили.
+
+Зависимости:
+  - Логирование: github.com/sirupsen/logrus
+  - Конфигурация: internal/config/app
+  - Сервис: internal/service
+  - Хендлеры: internal/handler
+*/
 func main() {
 	lg := logrus.New()
-	//ctx := context.Background()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	cfg := cfg.NewConfig()             // инициализация конфига
@@ -30,7 +44,6 @@ func main() {
 	defer sh.Close()
 
 	h := handler.NewHandlers(sh)
-	//serverDone := make(chan struct{})
 	go func() {
 		if err := h.StartHTTP(ctx, cfg.Port, cfg.SecretKey); err != nil && err != http.ErrServerClosed {
 			lg.Error("ошибка HTTP-сервера", "error", err)
@@ -42,7 +55,6 @@ func main() {
 	// Ждём сигнала остановки
 	<-ctx.Done()
 	lg.Info("получен сигнал остановки, завершаем работу...")
-	//time.Sleep(100 * time.Millisecond)
 	if cfg.RunProfile {
 		fmt.Println("зашли")
 		pprof.StopCPUProfile()
@@ -54,5 +66,4 @@ func main() {
 		}
 		sh.Fmem.Close()
 	}
-	time.Sleep(time.Second)
 }

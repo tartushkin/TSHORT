@@ -1,28 +1,64 @@
+// Package config отвечает за загрузку и инициализацию конфигурации приложения.
+//
+// Конфигурация может быть задана:
+//   - через флаги командной строки
+//   - через переменные окружения (имеют приоритет)
+//
+// Пример использования:
+//
+//	cfg := config.NewConfig()
+//	fmt.Println(cfg.Port)
 package config
 
 import (
 	"flag"
-	"fmt"
 	"os"
 )
 
+// Config хранит параметры конфигурации приложения.
 type Config struct {
-	Port            string
-	Address         string
+	// Port — порт, на котором запускается HTTP-сервер.
+	// Флаг: -a, переменная: SERVER_ADDRESS
+	Port string
+	// Address — базовый URL для генерации сокращённых ссылок.
+	// Флаг: -b, переменная: BASE_URL
+	Address string
+	// FileStoragePath — путь к файлу для хранения URL (если используется файловое хранилище).
+	// Флаг: -c, переменная: FILE_STORAGE_PATH
+
 	FileStoragePath string
-	DNS             string
 
+	// DNS — строка подключения к PostgreSQL.
+	// Флаг: -d, переменная: DATABASE_DSN
+	DNS string
+
+	// LocalAuditPath — путь к локальному файлу аудита.
+	// Флаг: -audit-file, переменная: AUDIT_FILE
 	LocalAuditPath string
-	AuditPath      string
-
+	// AuditPath — URL внешнего сервиса аудита.
+	// Флаг: -audit-url, переменная: AUDIT_URL
+	AuditPath string
+	// ParamDelete — интервал (в секундах) проверки помеченных на удаление URL.
+	// Флаг: -t
 	ParamDelete int
-	SecretKey   string
-
+	// SecretKey — ключ для подписи сессий и cookies.
+	// Флаг: -k
+	SecretKey string
+	// RunProfile — включает профилирование CPU и памяти.
+	// Флаг: -p (если указан — true)
 	RunProfile bool
+
 	runProfile string
 }
 
-// NewConfig - создание конфигурации приложения
+// NewConfig - создание конфигурации приложения.
+//
+// Значения устанавливаются в порядке приоритета:
+// 1. Переменные окружения (если заданы)
+// 2. Флаги командной строки
+// 3. Значения по умолчанию
+//
+// Возвращает указатель на инициализированный *Config.
 func NewConfig() *Config {
 	cfg := Config{}
 	// обязательные
@@ -30,17 +66,17 @@ func NewConfig() *Config {
 	flag.StringVar(&cfg.Address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&cfg.FileStoragePath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
 	flag.StringVar(&cfg.DNS, "d", "postgres://postgres:12345678@localhost:5432/myDB?sslmode=disable", "cтрока с адресом подключения к БД")
-
+	// аудит
 	flag.StringVar(&cfg.LocalAuditPath, "audit-file", "./Audit.TXT", "cтрока с адресом подключения к локальному аудит файлу")
 	flag.StringVar(&cfg.AuditPath, "audit-url", "", "cтрока с адресом подключения к внешнему аудит")
 
-	//индивидуальные
+	// индивидуальные
 	flag.IntVar(&cfg.ParamDelete, "t", 20, "частота запуска очистки от помеченных на удаление URL")
 	flag.StringVar(&cfg.SecretKey, "k", "tort-secret-key", "ключ")
 	flag.StringVar(&cfg.runProfile, "p", "", "флаг необходимоти профилирования сервиса")
 
 	flag.Parse()
-
+	// переменные окружения (имеют приоритет)
 	if runAddr, exists := os.LookupEnv("SERVER_ADDRESS"); exists && runAddr != "" {
 		cfg.Port = runAddr
 	}
@@ -63,17 +99,13 @@ func NewConfig() *Config {
 	if auditURL, exists := os.LookupEnv("AUDIT_URL"); exists && auditURL != "" {
 		cfg.AuditPath = auditURL
 	}
-	//profile
 
+	//profile
 	if cfg.runProfile == "" {
-		fmt.Println("1", cfg.runProfile)
 		cfg.RunProfile = false
 	} else {
-		fmt.Println("2 - ", cfg.runProfile)
 		cfg.RunProfile = true
 	}
-	fmt.Println("я тута1 - ", cfg.runProfile)
-	fmt.Println("я тута2- ", cfg.RunProfile)
 
 	return &cfg
 }

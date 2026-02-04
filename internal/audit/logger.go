@@ -1,3 +1,4 @@
+// Package audit предоставляет логгеры для аудита: файловый и удалённый.
 package audit
 
 import (
@@ -8,20 +9,23 @@ import (
 	"time"
 )
 
+// Logger — интерфейс для записи событий аудита.
 type Logger interface {
 	Log(event Event) error
 }
 
+// FileLogger - пишет события в файл.
 type FileLogger struct {
 	file *os.File
 }
 
-// внешний аудит
+// RemoteLogger -  внешний аудит.
 type RemoteLogger struct {
 	url    string
 	client *http.Client
 }
 
+// NewFileLogger создаёт новый файловый логгер.
 func NewFileLogger(path string) (*FileLogger, error) {
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -30,6 +34,7 @@ func NewFileLogger(path string) (*FileLogger, error) {
 	return &FileLogger{file: file}, nil
 }
 
+// NewRemoteLogger - создаёт логгер для внешнего аудита.
 func NewRemoteLogger(url string) *RemoteLogger {
 	return &RemoteLogger{
 		url:    url,
@@ -51,7 +56,7 @@ func (l *FileLogger) Close() error {
 	return l.file.Close()
 }
 
-// отправляем во внешний
+// Log - отправляем во внешний ресивер.
 func (l *RemoteLogger) Log(event Event) error {
 	data, err := json.Marshal(event)
 	if err != nil {
