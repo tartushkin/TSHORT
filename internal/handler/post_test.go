@@ -13,6 +13,7 @@ import (
 func TestPostHandler(t *testing.T) {
 	h := testCreate()
 	// Создаём экземпляр Echo
+
 	e := echo.New()
 
 	// 3. Валидный запрос
