@@ -79,7 +79,7 @@ func (l *RemoteLogger) Log(event Event) error {
 	case http.StatusOK:
 		return nil
 	case http.StatusInternalServerError:
-		return fmt.Errorf("log.err - при отправке аудита влзникла ошибка на стороне сервера.")
+		return fmt.Errorf("log.err - при отправке аудита влзникла ошибка на стороне сервера")
 	default:
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("log.err - неожиданный статус ответа: %d, body: %s", resp.StatusCode, string(body))
