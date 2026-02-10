@@ -48,7 +48,7 @@ type Config struct {
 	// Флаг: -p (если указан — true)
 	RunProfile bool
 
-	runProfile string
+	runProfile bool
 }
 
 // NewConfig - создание конфигурации приложения.
@@ -73,7 +73,7 @@ func NewConfig() *Config {
 	// индивидуальные
 	flag.IntVar(&cfg.ParamDelete, "t", 20, "частота запуска очистки от помеченных на удаление URL")
 	flag.StringVar(&cfg.SecretKey, "k", "tort-secret-key", "ключ")
-	flag.StringVar(&cfg.runProfile, "p", "", "флаг необходимоти профилирования сервиса")
+	flag.BoolVar(&cfg.runProfile, "p", false, "флаг необходимоти профилирования сервиса")
 
 	flag.Parse()
 	// переменные окружения (имеют приоритет)
@@ -99,13 +99,5 @@ func NewConfig() *Config {
 	if auditURL, exists := os.LookupEnv("AUDIT_URL"); exists && auditURL != "" {
 		cfg.AuditPath = auditURL
 	}
-
-	//profile
-	if cfg.runProfile == "" {
-		cfg.RunProfile = false
-	} else {
-		cfg.RunProfile = true
-	}
-
 	return &cfg
 }

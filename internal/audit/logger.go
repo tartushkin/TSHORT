@@ -4,6 +4,8 @@ package audit
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -72,5 +74,14 @@ func (l *RemoteLogger) Log(event Event) error {
 		return err
 	}
 	defer resp.Body.Close()
-	return nil
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		return nil
+	case http.StatusInternalServerError:
+		return fmt.Errorf("log.err - при отправке аудита влзникла ошибка на стороне сервера.")
+	default:
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("log.err - неожиданный статус ответа: %d, body: %s", resp.StatusCode, string(body))
+	}
 }

@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -17,6 +16,8 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/audit"
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
+
+const unknown = "unknown"
 
 type Handlers struct {
 	Short      *service.Short // внутриняя логика приложения
@@ -193,29 +194,16 @@ func (h *Handlers) Audit(next echo.HandlerFunc) echo.HandlerFunc {
 		err := next(c)
 
 		if c.Response().Status >= 200 && c.Response().Status < 300 {
-			var action string
-			switch c.Request().Method {
-			case "GET":
-				action = "follow"
-			case "POST":
-				action = "shorten"
-			}
 			originalURL, ok := c.Get("original_url").(string)
 			if !ok && originalURL == "" {
-				originalURL = "unknown"
+				originalURL = unknown
 			}
 			userID, ok := c.Get("userID").(string)
 			if !ok {
-				userID = "unknown"
+				userID = unknown
 			}
 
-			// Формируем событие аудита
-			event := audit.Event{
-				TS:     time.Now().Unix(),
-				Action: action,
-				UserID: userID, // Предполагается, что user_id сохранён в контексте
-				URL:    originalURL,
-			}
+			event := audit.NewEvent(c.Request().Method, userID, originalURL)
 			go h.dis.Dispatch(h.Short.Ctx, h.Short.Logger, event)
 
 		}

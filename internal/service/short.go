@@ -39,15 +39,9 @@ type Short struct {
 	DNS         string
 	paramDelete time.Duration
 
-	//auditLocal string
-	//auditURL string
-
 	FileStorage *model.FileStorage
-	//Dis         *audit.Dispatcher
-	Fcpu *os.File
-	Fmem *os.File
-
-	RunProfile bool
+	Fcpu        *os.File
+	Fmem        *os.File
 }
 
 // NewShort - заполнение структуры приложения.
@@ -92,16 +86,14 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, *a
 	}
 
 	if cfg.LocalAuditPath != "" {
-		err := dis.NewFileLogger(cfg.LocalAuditPath) //file,
+		err := dis.NewFileLogger(cfg.LocalAuditPath)
 		if err != nil {
 			lg.Error("create.audit - ошибка создания файла для аудита", err)
 		}
-		//sh.Dis.AddLogger(file)
 	}
+
 	if cfg.AuditPath != "" {
-		//au :=
 		dis.NewRemoteLogger(cfg.AuditPath)
-		//sh.Dis.AddLogger(au)
 	}
 
 	if cfg.RunProfile {
@@ -110,6 +102,7 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, *a
 			return nil, nil, err
 		}
 	}
+
 	go sh.StartCleanup(ctx, sh.paramDelete)
 	return sh, dis, nil
 }

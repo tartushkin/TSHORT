@@ -1,6 +1,15 @@
 package audit
 
-import "time"
+import (
+	"net/http"
+	"time"
+)
+
+const (
+	get     = "follow"
+	post    = "shorten"
+	unknown = "unknown"
+)
 
 // Event - собитие аудита.
 type Event struct {
@@ -11,7 +20,17 @@ type Event struct {
 }
 
 // NewEvent - формировние нового события.
-func NewEvent(action, userID, url string) Event {
+func NewEvent(method, userID, url string) Event {
+	var action string
+	switch method {
+	case http.MethodGet:
+		action = get
+	case http.MethodPost:
+		action = post
+	default:
+		action = unknown
+	}
+
 	return Event{
 		TS:     time.Now().Unix(),
 		Action: action,
