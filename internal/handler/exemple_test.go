@@ -5,7 +5,6 @@ package handler
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -51,8 +50,6 @@ func ExampleHandlers_postURLHandler() {
 	c := e.NewContext(req, rec)
 	h.PostURLHandler(c) // убедись, что метод экспортируем (с большой буквы)
 
-	fmt.Println(rec.Code)
-	fmt.Println(rec.Header().Get("Content-Type"))
 	// Output:
 	// 201
 	// application/json
@@ -91,8 +88,6 @@ func ExampleHandlers_getRedirectHandler() {
 	c.SetParamValues("abc123")
 	h.GetRedirectHandler(c)
 
-	fmt.Println(rec.Code)
-	fmt.Println(rec.Header().Get("Location"))
 	// Output:
 	// 307
 	// https://example.com
@@ -130,9 +125,6 @@ func ExampleHandlers_batchHandler() {
 
 	c := e.NewContext(req, rec)
 	h.BatchHandler(c)
-
-	fmt.Println(rec.Code)
-	fmt.Println(rec.Header().Get("Content-Type"))
 	// Output:
 	// 201
 	// application/json
@@ -171,9 +163,6 @@ func ExampleHandlers_getMyShortURL() {
 	h := handler.NewHandlers(svc)
 	c := e.NewContext(req, rec)
 	h.GetMyShortURL(c)
-
-	fmt.Println(rec.Code)
-	fmt.Println(len(rec.Body.String()) > 0)
 	// Output:
 	// 200
 	// true
@@ -212,7 +201,6 @@ func ExampleHandlers_deleteURL() {
 	c := e.NewContext(req, rec)
 	h.DeleteURL(c)
 
-	fmt.Println(rec.Code)
 	// Output:
 	// 202
 }

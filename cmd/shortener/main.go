@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -34,20 +33,20 @@ main запускает HTTP-сервер для сокращения URL.
 */
 func main() {
 	lg := logrus.New()
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-	cfg := cfg.NewConfig()             // инициализация конфига
-	sh, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	cfg := cfg.NewConfig()                  // инициализация конфига
+	sh, dis, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
 	if err != nil {
 		panic(err)
 	}
 	defer sh.Close()
 
-	h := handler.NewHandlers(sh)
+	h := handler.NewHandlers(dis, sh)
 	go func() {
 		if err := h.StartHTTP(ctx, cfg.Port, cfg.SecretKey); err != nil && err != http.ErrServerClosed {
 			lg.Error("ошибка HTTP-сервера", "error", err)
-			stop()
+			cancel()
 		}
 	}()
 	lg.Info("HTTP-сервер запущен", "port", cfg.Port)
@@ -56,13 +55,13 @@ func main() {
 	<-ctx.Done()
 	lg.Info("получен сигнал остановки, завершаем работу...")
 	if cfg.RunProfile {
-		fmt.Println("зашли")
 		pprof.StopCPUProfile()
 		sh.Fcpu.Close()
 
 		err := sh.MemProfile()
 		if err != nil {
-			panic(err)
+			lg.Error("ошибка профилирования памяти", "error", err)
+			cancel()
 		}
 		sh.Fmem.Close()
 	}

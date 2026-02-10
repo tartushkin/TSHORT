@@ -22,6 +22,7 @@ type Handlers struct {
 	Short      *service.Short // внутриняя логика приложения
 	httpServer *echo.Echo
 	secret     string
+	dis        *audit.Dispatcher
 }
 
 type compressWriter struct {
@@ -33,8 +34,8 @@ type compressReader struct {
 	zr *gzip.Reader
 }
 
-func NewHandlers(short *service.Short) *Handlers {
-	return &Handlers{Short: short}
+func NewHandlers(dis *audit.Dispatcher, short *service.Short) *Handlers {
+	return &Handlers{Short: short, dis: dis}
 }
 
 // StartHTTP - инициализация и запуск сервера
@@ -215,7 +216,7 @@ func (h *Handlers) Audit(next echo.HandlerFunc) echo.HandlerFunc {
 				UserID: userID, // Предполагается, что user_id сохранён в контексте
 				URL:    originalURL,
 			}
-			go h.Short.Dis.Dispatch(h.Short.Logger, event)
+			go h.dis.Dispatch(h.Short.Ctx, h.Short.Logger, event)
 
 		}
 

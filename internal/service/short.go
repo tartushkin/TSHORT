@@ -31,7 +31,6 @@ type Short struct {
 	CacheURL map[string]*model.AliasFullCore
 	Conn     *sql.DB
 	Repo     *repository.Repo
-	//client   *Client
 
 	HTTPPort    string
 	Address     string
@@ -40,19 +39,19 @@ type Short struct {
 	DNS         string
 	paramDelete time.Duration
 
-	auditLocal string
-	auditURL   string
+	//auditLocal string
+	//auditURL string
 
 	FileStorage *model.FileStorage
-	Dis         *audit.Dispatcher
-	Fcpu        *os.File
-	Fmem        *os.File
+	//Dis         *audit.Dispatcher
+	Fcpu *os.File
+	Fmem *os.File
 
 	RunProfile bool
 }
 
 // NewShort - заполнение структуры приложения.
-func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, error) {
+func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, *audit.Dispatcher, error) {
 	cacheURL := map[string]*model.AliasFullCore{}
 
 	sh := &Short{
@@ -61,14 +60,15 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		CacheURL: cacheURL,
 		HTTPPort: cfg.Port,
 		Address:  cfg.Address,
-		Dis:      audit.NewDispatcher(),
+		//Dis:      audit.NewDispatcher(),
 	}
+	dis := audit.NewDispatcher()
 
 	if cfg.FileStoragePath != "" {
 		sh.PathStorage = cfg.FileStoragePath
 		file, err := sh.NewFile(sh.PathStorage)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		sh.FileStorage = file
 	}
@@ -92,27 +92,26 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 	}
 
 	if cfg.LocalAuditPath != "" {
-		sh.auditLocal = cfg.LocalAuditPath
-		file, err := audit.NewFileLogger(sh.auditLocal)
+		err := dis.NewFileLogger(cfg.LocalAuditPath) //file,
 		if err != nil {
 			lg.Error("create.audit - ошибка создания файла для аудита", err)
 		}
-		sh.Dis.AddLogger(file)
+		//sh.Dis.AddLogger(file)
 	}
 	if cfg.AuditPath != "" {
-		sh.auditURL = cfg.AuditPath
-		au := audit.NewRemoteLogger(sh.auditURL)
-		sh.Dis.AddLogger(au)
+		//au :=
+		dis.NewRemoteLogger(cfg.AuditPath)
+		//sh.Dis.AddLogger(au)
 	}
 
 	if cfg.RunProfile {
 		err := sh.CPUProfile()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	go sh.StartCleanup(ctx, sh.paramDelete)
-	return sh, nil
+	return sh, dis, nil
 }
 
 // NewFile - создание файла для хранения пар URL

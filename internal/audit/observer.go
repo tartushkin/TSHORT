@@ -16,6 +16,8 @@
 package audit
 
 import (
+	"context"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -53,13 +55,18 @@ func (d *Dispatcher) AddLogger(logger Logger) {
 // Параметры:
 //   - lg: *logrus.Logger для записи ошибок диспетчера
 //   - event: событие аудита
-func (d *Dispatcher) Dispatch(lg *logrus.Logger, event Event) {
+func (d *Dispatcher) Dispatch(ctx context.Context, lg *logrus.Logger, event Event) {
 	for _, logger := range d.loggers {
-		go func(l Logger) {
-			if err := l.Log(event); err != nil {
-				// Логируем ошибку аудита (например, в stderr)
-				lg.Errorf("dispatch.err -  %v", err)
+		go func(ctx context.Context, l Logger) {
+			select {
+			case <-ctx.Done():
+				lg.Info("Dispatch.cancel - контекст прерван")
+				return
+			default:
+				if err := l.Log(event); err != nil {
+					lg.Errorf("dispatch.err - %v", err)
+				}
 			}
-		}(logger)
+		}(ctx, logger)
 	}
 }
