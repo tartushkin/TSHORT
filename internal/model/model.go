@@ -27,6 +27,7 @@ type PostURLHandlerRequest struct {
 	URL string `json:"url"`
 }
 
+// generate:reset
 // PostURLHandlerResponse — ответ хендлера (универсальный).
 type PostURLHandlerResponse struct {
 	ErrMsg string
@@ -34,6 +35,7 @@ type PostURLHandlerResponse struct {
 }
 
 // FileStorage — обёртка для файлового хранилища URL.
+// generate:reset
 type FileStorage struct {
 	SURL    *os.File
 	Encoder *json.Encoder
