@@ -86,6 +86,9 @@ func (r *Repo) GetOriginalURL(ctx context.Context, alias string) (*model.AliasFu
 }
 
 func (r *Repo) GetUserURL(ctx context.Context, userID string) ([]*model.AliasFullCore, error) {
+	if r.conn == nil {
+		return nil, nil
+	}
 	rows, err := r.conn.QueryContext(ctx, `SELECT s_alias, s_full, b_is_deleted FROM t_short.t_list WHERE s_user_id = $1`, userID)
 	if err != nil {
 		return nil, err

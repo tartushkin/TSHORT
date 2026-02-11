@@ -12,8 +12,9 @@ func (s *Short) ReaderBody(body []byte, userID, req string) ([]*model.BranchResp
 	if err != nil {
 		return nil, err
 	}
-	responseList := []*model.BranchResponse{}
-	newList := []*model.AliasFullCore{}
+	responseList := make([]*model.BranchResponse, 0, len(list))
+	newList := make([]*model.AliasFullCore, 0, len(list))
+
 	for _, couple := range list {
 		alias, ok := s.checkURL(couple.OriginalURL) //сначала проверяем кеш, потом проверяем наличие в базе
 		if ok {
@@ -93,7 +94,6 @@ func (s *Short) checkBody(body []byte, userID, req string) ([]*model.AliasFullCo
 
 func (s *Short) GetUserURL(userID string) ([]*model.UserURLResponse, error) {
 	coupleList := []*model.UserURLResponse{}
-
 	for _, couple := range s.CacheURL {
 		if couple.UserID == userID {
 			coupleList = append(coupleList, &model.UserURLResponse{
@@ -107,10 +107,11 @@ func (s *Short) GetUserURL(userID string) ([]*model.UserURLResponse, error) {
 		if err != nil {
 			return nil, err
 		}
+		coupleList = make([]*model.UserURLResponse, 0, len(coupleList))
 		for _, couple := range list {
 			coupleList = append(coupleList, &model.UserURLResponse{
 				OriginalURL: couple.OriginalURL,
-				ShortURL:    fmt.Sprintf("%s/%s", s.Address, couple.Alias),
+				ShortURL:    s.Address + "/" + couple.Alias, //fmt.Sprintf("%s/%s", s.Address, couple.Alias),
 			})
 		}
 		if len(list) == 0 {
@@ -122,7 +123,7 @@ func (s *Short) GetUserURL(userID string) ([]*model.UserURLResponse, error) {
 }
 
 func (s *Short) DeleteUserURL(userID string, deleteList []string) error {
-	listDel := []string{}
+	listDel := make([]string, 0, len(deleteList))
 
 	for _, couple := range s.CacheURL {
 		for _, del := range deleteList {

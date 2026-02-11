@@ -6,6 +6,7 @@ import (
 	"flag"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -20,7 +21,11 @@ var DNS string
 
 func testCreate() *Handlers {
 	if DNS == "" {
-		flag.StringVar(&DNS, "d", "host=localhost port=5432 user=postgres password=12345678 dbname=myDB sslmode=disable", "cтрока с адресом подключения к БД")
+		flag.StringVar(&DNS, "d", "postgres://postgres:12345678@localhost:5432/myDB?sslmode=disable", "cтрока с адресом подключения к БД")
+		if db, exists := os.LookupEnv("DATABASE_DSN"); exists && db != "" {
+			DNS = db
+		}
+
 	}
 	if configPath == "" {
 		flag.StringVar(&configPath, "g", "./StorageURL.TXT", "путь для файла хранения URL")
@@ -29,23 +34,11 @@ func testCreate() *Handlers {
 		CacheURL: make(map[string]*model.AliasFullCore),
 		Logger:   logrus.New(),
 	}
-	//short.PathStorage = configPath
-	//short.DNS = DNS
+	//repository.NewRepository()
 	short.Ctx = context.Background()
-	//conn, err := db.NewConnection(short.DNS)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//short.Logger.Info("db: успешно подключились к DB")
-	//
-	//short.Repo = repository.NewRepository(conn)
 
 	TestHandlers := &Handlers{Short: short}
-	//file, err := TestHandlers.Short.NewFile()
-	//if err != nil {
-	//	short.Logger.Fatalf("Ошибка при формировании файла: %v", err)
-	//}
-	////TestHandlers.Short.File = file
+
 	return TestHandlers
 }
 func TestGetHandler(t *testing.T) {

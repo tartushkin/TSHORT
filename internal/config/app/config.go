@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"os"
 )
 
@@ -16,6 +17,9 @@ type Config struct {
 
 	ParamDelete int
 	SecretKey   string
+
+	RunProfile bool
+	runProfile string
 }
 
 // NewConfig - создание конфигурации приложения
@@ -33,6 +37,7 @@ func NewConfig() *Config {
 	//индивидуальные
 	flag.IntVar(&cfg.ParamDelete, "t", 20, "частота запуска очистки от помеченных на удаление URL")
 	flag.StringVar(&cfg.SecretKey, "k", "tort-secret-key", "ключ")
+	flag.StringVar(&cfg.runProfile, "p", "", "флаг необходимоти профилирования сервиса")
 
 	flag.Parse()
 
@@ -58,6 +63,17 @@ func NewConfig() *Config {
 	if auditURL, exists := os.LookupEnv("AUDIT_URL"); exists && auditURL != "" {
 		cfg.AuditPath = auditURL
 	}
+	//profile
+
+	if cfg.runProfile == "" {
+		fmt.Println("1", cfg.runProfile)
+		cfg.RunProfile = false
+	} else {
+		fmt.Println("2 - ", cfg.runProfile)
+		cfg.RunProfile = true
+	}
+	fmt.Println("я тута1 - ", cfg.runProfile)
+	fmt.Println("я тута2- ", cfg.RunProfile)
 
 	return &cfg
 }
