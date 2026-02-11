@@ -7,6 +7,8 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/model"
 )
 
+// ReaderBody - получает тело запроса в нужном формате исходя из модели хранения,
+// и затем записывает его в хранилище.
 func (s *Short) ReaderBody(body []byte, userID, req string) ([]*model.BranchResponse, error) {
 	list, err := s.checkBody(body, userID, req) // получаем тело запроса
 	if err != nil {
@@ -47,6 +49,7 @@ func (s *Short) ReaderBody(body []byte, userID, req string) ([]*model.BranchResp
 	return responseList, nil
 }
 
+// checkBody - чтение тела запроса
 func (s *Short) checkBody(body []byte, userID, req string) ([]*model.AliasFullCore, error) {
 
 	s.Logger.Info("ReaderBody.start - чтение тела запроса")
@@ -92,6 +95,7 @@ func (s *Short) checkBody(body []byte, userID, req string) ([]*model.AliasFullCo
 	return coupleList, nil
 }
 
+// GetUserURL - формирует и возвращает список коротких/полных URL'ов пользователя
 func (s *Short) GetUserURL(userID string) ([]*model.UserURLResponse, error) {
 	coupleList := []*model.UserURLResponse{}
 	for _, couple := range s.CacheURL {
@@ -122,6 +126,7 @@ func (s *Short) GetUserURL(userID string) ([]*model.UserURLResponse, error) {
 	return coupleList, nil
 }
 
+// DeleteUserURL - помечает URL на удаление
 func (s *Short) DeleteUserURL(userID string, deleteList []string) error {
 	listDel := make([]string, 0, len(deleteList))
 

@@ -1,3 +1,5 @@
+// Package handler - запуск сервера и обработка запросов
+
 package handler
 
 import (
@@ -7,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -16,10 +17,13 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/service"
 )
 
+const unknown = "unknown"
+
 type Handlers struct {
 	Short      *service.Short // внутриняя логика приложения
 	httpServer *echo.Echo
 	secret     string
+	dis        *audit.Dispatcher
 }
 
 type compressWriter struct {
@@ -31,8 +35,8 @@ type compressReader struct {
 	zr *gzip.Reader
 }
 
-func NewHandlers(short *service.Short) *Handlers {
-	return &Handlers{Short: short}
+func NewHandlers(dis *audit.Dispatcher, short *service.Short) *Handlers {
+	return &Handlers{Short: short, dis: dis}
 }
 
 // StartHTTP - инициализация и запуск сервера
@@ -74,9 +78,6 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort, sk string) error {
 	h.httpServer.GET("/api/user/urls", h.getMyShortURL)
 	h.httpServer.DELETE("/api/user/urls", h.deleteURL)
 
-	//if err := h.httpServer.Start(httpPort); err != nil && err != http.ErrServerClosed {
-	//	h.httpServer.Logger.Info("Сервер остановлен: %v", err)
-	//}
 	go func() {
 		<-ctx.Done()
 		h.Short.Logger.Info("Контекст завершен")
@@ -193,30 +194,17 @@ func (h *Handlers) Audit(next echo.HandlerFunc) echo.HandlerFunc {
 		err := next(c)
 
 		if c.Response().Status >= 200 && c.Response().Status < 300 {
-			var action string
-			switch c.Request().Method {
-			case "GET":
-				action = "follow"
-			case "POST":
-				action = "shorten"
-			}
 			originalURL, ok := c.Get("original_url").(string)
 			if !ok && originalURL == "" {
-				originalURL = "unknown"
+				originalURL = unknown
 			}
 			userID, ok := c.Get("userID").(string)
 			if !ok {
-				userID = "unknown"
+				userID = unknown
 			}
 
-			// Формируем событие аудита
-			event := audit.Event{
-				TS:     time.Now().Unix(),
-				Action: action,
-				UserID: userID, // Предполагается, что user_id сохранён в контексте
-				URL:    originalURL,
-			}
-			go h.Short.Dis.Dispatch(h.Short.Logger, event)
+			event := audit.NewEvent(c.Request().Method, userID, originalURL)
+			go h.dis.Dispatch(h.Short.Ctx, h.Short.Logger, event)
 
 		}
 

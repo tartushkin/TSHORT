@@ -36,6 +36,10 @@ func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 
 }
 
+// getRedirectHandler выполняет редирект по короткому ключу.
+//
+// Если URL помечен как удалённый — возвращает 410 Gone.
+// Если не найден — 404 Not Found.
 func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 	// Получаем URL из параметров запроса
 	alias := ctx.Param("id")
@@ -65,6 +69,16 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 	return nil
 }
 
+// postURLHandler сокращает один URL из JSON.
+//
+// Ожидает:
+//   - Content-Type: application/json
+//   - Тело: {"url": "https://example.com"}
+//
+// Возвращает:
+//   - 201 Created: {"result": "http://localhost:8080/abc123"}
+//   - 409 Conflict: если URL уже существует
+//   - 400/500: при ошибках
 func (h *Handlers) postURLHandler(ctx echo.Context) error {
 
 	// Получаем значение заголовка Content-Type
@@ -103,6 +117,13 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 
 }
 
+// testConnectionDB проверяет подключение к базе данных.
+//
+// Используется для health-check.
+//
+// Возвращает:
+//   - 200 OK: если соединение есть
+//   - 500 Internal Server Error: если нет
 func (h *Handlers) testConnectionDB(ctx echo.Context) error {
 	err := h.Short.Repo.TestConnectionDB()
 	if err != nil {
@@ -111,6 +132,16 @@ func (h *Handlers) testConnectionDB(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, "")
 }
 
+// batchHandler обрабатывает массовое сокращение URL.
+//
+// Принимает массив:
+//   - [{"correlation_id": "...", "original_url": "..."}, ...]
+//
+// Возвращает:
+//   - 201 Created: [{"correlation_id": "...", "short_url": "..."}, ...]
+//   - 400: если Content-Type не application/json
+//   - 401: если не авторизован
+//   - 500: при внутренних ошибках
 func (h *Handlers) batchHandler(ctx echo.Context) error {
 	// Получаем значение заголовка Content-Type
 	contentType := ctx.Request().Header.Get("Content-Type")
@@ -143,6 +174,15 @@ func (h *Handlers) batchHandler(ctx echo.Context) error {
 	return ctx.JSON(http.StatusCreated, listURL)
 }
 
+// getMyShortURL возвращает список всех URL пользователя.
+//
+// Если список пуст — возвращает 204 No Content.
+//
+// Возвращает:
+//   - 200 OK: [{...}]
+//   - 204 No Content: если нет URL
+//   - 401: если не авторизован
+//   - 500: при внутренней ошибке
 func (h *Handlers) getMyShortURL(ctx echo.Context) error {
 	userID, err := h.getUserID(ctx)
 	if err != nil {
@@ -166,6 +206,16 @@ func (h *Handlers) getMyShortURL(ctx echo.Context) error {
 
 }
 
+// deleteURL помечает URL на удаление (soft delete).
+//
+// Принимает:
+//   - Массив alias: ["abc123", "def456"]
+//
+// Возвращает:
+//   - 202 Accepted: успешно принято
+//   - 400: неверный формат тела
+//   - 401: не авторизован
+//   - 500: ошибка при обработке
 func (h *Handlers) deleteURL(ctx echo.Context) error {
 
 	deleteList := []string{}

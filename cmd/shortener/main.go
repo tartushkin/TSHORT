@@ -2,13 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"runtime/pprof"
 	"syscall"
-	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/sirupsen/logrus"
@@ -17,24 +15,38 @@ import (
 	sr "github.com/tartushkin/TSHORT.git/internal/service"
 )
 
+/*
+main запускает HTTP-сервер для сокращения URL.
+
+Программа:
+ 1. Инициализирует логгер, конфигурацию и сервис.
+ 2. Запускает HTTP-сервер в отдельной горутине.
+ 3. Ожидает сигнала завершения (Ctrl+C, SIGTERM).
+ 4. При получении сигнала — корректно останавливается.
+ 5. Если включено профилирование (RunProfile), останавливает CPU- и memory-профили.
+
+Зависимости:
+  - Логирование: github.com/sirupsen/logrus
+  - Конфигурация: internal/config/app
+  - Сервис: internal/service
+  - Хендлеры: internal/handler
+*/
 func main() {
 	lg := logrus.New()
-	//ctx := context.Background()
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-	cfg := cfg.NewConfig()             // инициализация конфига
-	sh, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	cfg := cfg.NewConfig()                  // инициализация конфига
+	sh, dis, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
 	if err != nil {
 		panic(err)
 	}
 	defer sh.Close()
 
-	h := handler.NewHandlers(sh)
-	//serverDone := make(chan struct{})
+	h := handler.NewHandlers(dis, sh)
 	go func() {
 		if err := h.StartHTTP(ctx, cfg.Port, cfg.SecretKey); err != nil && err != http.ErrServerClosed {
 			lg.Error("ошибка HTTP-сервера", "error", err)
-			stop()
+			cancel()
 		}
 	}()
 	lg.Info("HTTP-сервер запущен", "port", cfg.Port)
@@ -42,17 +54,15 @@ func main() {
 	// Ждём сигнала остановки
 	<-ctx.Done()
 	lg.Info("получен сигнал остановки, завершаем работу...")
-	//time.Sleep(100 * time.Millisecond)
 	if cfg.RunProfile {
-		fmt.Println("зашли")
 		pprof.StopCPUProfile()
 		sh.Fcpu.Close()
 
 		err := sh.MemProfile()
 		if err != nil {
-			panic(err)
+			lg.Error("ошибка профилирования памяти", "error", err)
+			cancel()
 		}
 		sh.Fmem.Close()
 	}
-	time.Sleep(time.Second)
 }

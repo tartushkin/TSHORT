@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// getUserID - извлекает ID пользователя из куки
+// GetUser - извлекает ID пользователя из куки
 func (s *Short) GetUser(c echo.Context) (string, error) {
 	if userID, ok := c.Get("userID").(string); ok {
 		return userID, nil

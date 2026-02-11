@@ -21,7 +21,7 @@ import (
 )
 
 const defaultParamDelete = 20 // дефолтный параметр на запуска процесса уадаления
-
+// Short — основной сервис для работы с URL.
 type Short struct {
 	mu sync.RWMutex
 
@@ -31,7 +31,6 @@ type Short struct {
 	CacheURL map[string]*model.AliasFullCore
 	Conn     *sql.DB
 	Repo     *repository.Repo
-	//client   *Client
 
 	HTTPPort    string
 	Address     string
@@ -40,19 +39,13 @@ type Short struct {
 	DNS         string
 	paramDelete time.Duration
 
-	auditLocal string
-	auditURL   string
-
 	FileStorage *model.FileStorage
-	Dis         *audit.Dispatcher
 	Fcpu        *os.File
 	Fmem        *os.File
-
-	RunProfile bool
 }
 
-// NewShort - заполнение структуры приложения
-func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, error) {
+// NewShort - заполнение структуры приложения.
+func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, *audit.Dispatcher, error) {
 	cacheURL := map[string]*model.AliasFullCore{}
 
 	sh := &Short{
@@ -61,14 +54,15 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 		CacheURL: cacheURL,
 		HTTPPort: cfg.Port,
 		Address:  cfg.Address,
-		Dis:      audit.NewDispatcher(),
+		//Dis:      audit.NewDispatcher(),
 	}
+	dis := audit.NewDispatcher()
 
 	if cfg.FileStoragePath != "" {
 		sh.PathStorage = cfg.FileStoragePath
 		file, err := sh.NewFile(sh.PathStorage)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		sh.FileStorage = file
 	}
@@ -92,30 +86,25 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, er
 	}
 
 	if cfg.LocalAuditPath != "" {
-		sh.auditLocal = cfg.LocalAuditPath
-		file, err := audit.NewFileLogger(sh.auditLocal)
+		err := dis.NewFileLogger(cfg.LocalAuditPath)
 		if err != nil {
 			lg.Error("create.audit - ошибка создания файла для аудита", err)
 		}
-		sh.Dis.AddLogger(file)
-	}
-	if cfg.AuditPath != "" {
-		sh.auditURL = cfg.AuditPath
-		au := audit.NewRemoteLogger(sh.auditURL)
-		sh.Dis.AddLogger(au)
 	}
 
-	//cl := NewClient(sh.Address, sh.auditURL) // а
-	//sh.client = cl
+	if cfg.AuditPath != "" {
+		dis.NewRemoteLogger(cfg.AuditPath)
+	}
 
 	if cfg.RunProfile {
 		err := sh.CPUProfile()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
+
 	go sh.StartCleanup(ctx, sh.paramDelete)
-	return sh, nil
+	return sh, dis, nil
 }
 
 // NewFile - создание файла для хранения пар URL
@@ -181,6 +170,7 @@ func (s *Short) LoadStorageURL() error {
 
 }
 
+// StartCleanup - процесс очистки помеченных на удаления URL
 func (s *Short) StartCleanup(ctx context.Context, param time.Duration) {
 	ticker := time.NewTicker(param)
 	s.Logger.Info("StartCleanup.start - старт процесса очистки помеченных на удаления URL")
@@ -203,6 +193,7 @@ func (s *Short) StartCleanup(ctx context.Context, param time.Duration) {
 	}
 }
 
+// CPUProfile -  профилирования CPU
 func (s *Short) CPUProfile() error {
 	fcpu, err := os.OpenFile("./profiles/result.pprof", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
@@ -217,6 +208,7 @@ func (s *Short) CPUProfile() error {
 	return nil
 }
 
+// MemProfile -  профилирования памяти
 func (s *Short) MemProfile() error {
 	// создаём файл журнала профилирования памяти
 	fmem, err := os.OpenFile("./profiles/result.pprof", os.O_RDWR|os.O_CREATE, 0666)

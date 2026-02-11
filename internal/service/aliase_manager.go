@@ -1,3 +1,6 @@
+// Package service реализует бизнес-логику приложения: сокращение URL,
+// работа с кешем, хранилищем.
+
 package service
 
 import (
@@ -10,14 +13,15 @@ import (
 	"github.com/tartushkin/TSHORT.git/internal/model"
 )
 
-// SetCouple - добавление пары сокращенный/оригинальный url в кеш
+// setCouple - добавление пары сокращенный/оригинальный url в кеш.
 func (s *Short) setCouple(coupe *model.AliasFullCore) {
 	s.mu.RLock()
 	s.CacheURL[coupe.Alias] = coupe
 	s.mu.RUnlock()
-	//URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias) //URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias)
+
 }
 
+// GetOriginalURL возвращает оригинальный URL по сокращённому.
 func (s *Short) GetOriginalURL(shortURL string) string {
 	parts := strings.Split(shortURL, "/")
 	alias := parts[len(parts)-1]
@@ -38,7 +42,8 @@ func (s *Short) getFull(alias string) string {
 	return URL
 }
 
-// GetAliasName - получение оригинального url
+// GetAliasName - возвращает оригинальный URL по alias.
+// Возвращает ошибку, если URL помечен как удалённый.
 func (s *Short) GetAliasName(aliasURL string) (string, error) {
 	var couple *model.AliasFullCore
 	s.mu.RLock()
@@ -77,6 +82,7 @@ func (s *Short) checkURL(outURL string) (string, bool) {
 	return "", false
 }
 
+// checkSourse - определяет тип хранилища: DATABASE, FILE или CACHE.
 func (s *Short) checkSourse() string {
 	if s.Conn != nil {
 		return model.DATABASE
@@ -87,6 +93,7 @@ func (s *Short) checkSourse() string {
 	return model.CACHE
 }
 
+// insertURL -  сохраняет список URL в выбранное хранилище.
 func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 	sourse := s.checkSourse()
 	switch sourse {
@@ -136,6 +143,8 @@ func (s *Short) insertURL(listURL []*model.AliasFullCore, req string) error {
 	}
 	return nil
 }
+
+// getUUID - генерирует короткий alias (8 символов).
 func (s *Short) getUUID() string {
 	uuidURL := uuid.New()
 	aliasURL := uuidURL.String()
@@ -144,6 +153,7 @@ func (s *Short) getUUID() string {
 	return aliasURL
 }
 
+// DeleteMarkedURLs - удаляет помеченные URL из БД и кеша.
 func (s *Short) DeleteMarkedURLs(ctx context.Context) error {
 
 	err := s.Repo.DeleteMarkedURLs(ctx)
