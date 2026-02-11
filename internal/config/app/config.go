@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"os"
 )
 
@@ -66,14 +65,10 @@ func NewConfig() *Config {
 	//profile
 
 	if cfg.runProfile == "" {
-		fmt.Println("1", cfg.runProfile)
 		cfg.RunProfile = false
 	} else {
-		fmt.Println("2 - ", cfg.runProfile)
 		cfg.RunProfile = true
 	}
-	fmt.Println("я тута1 - ", cfg.runProfile)
-	fmt.Println("я тута2- ", cfg.RunProfile)
 
 	return &cfg
 }
