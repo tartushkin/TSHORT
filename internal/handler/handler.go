@@ -19,6 +19,7 @@ func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 		h.Short.Logger.Error("ошибка при работе с телом запроса: " + err.Error())
 		return ctx.String(http.StatusUnauthorized, err.Error())
 	}
+
 	list, err := h.Short.ReaderBody(body, userID, model.Text)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), model.ERRCONFLICT) {
@@ -27,6 +28,7 @@ func (h *Handlers) oldPostURLHandler(ctx echo.Context) error {
 		}
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	ctx.Set("original_url", string(body))
 	for _, couple := range list {
 		shortURL = couple.ShortURL
 	}
@@ -52,6 +54,7 @@ func (h *Handlers) getRedirectHandler(ctx echo.Context) error {
 		}
 		return ctx.JSON(http.StatusNotFound, err.Error())
 	}
+	ctx.Set("original_url", originalURL)
 	h.Short.Logger.Info("HTTP.Response - возвращаем полный URL по алиасу: " + alias + " - " + originalURL)
 	ctx.Redirect(http.StatusTemporaryRedirect, originalURL)
 	for key, values := range ctx.Response().Header() {
@@ -93,6 +96,8 @@ func (h *Handlers) postURLHandler(ctx echo.Context) error {
 	for _, couple := range listURL {
 		res.Result = couple.ShortURL
 	}
+	origURL := h.Short.GetOriginalURL(res.Result)
+	ctx.Set("original_url", origURL)
 
 	return ctx.JSON(http.StatusCreated, res)
 

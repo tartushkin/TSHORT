@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/tartushkin/TSHORT.git/internal/model"
@@ -15,6 +16,21 @@ func (s *Short) setCouple(coupe *model.AliasFullCore) {
 	s.CacheURL[coupe.Alias] = coupe
 	s.mu.RUnlock()
 	//URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias) //URL := fmt.Sprintf("%s/%s", s.Address, coupe.Alias)
+}
+
+func (s *Short) GetOriginalURL(shortURL string) string {
+	parts := strings.Split(shortURL, "/")
+	alias := parts[len(parts)-1]
+
+	if s.Repo != nil {
+		org, err := s.Repo.GetOriginalURL(s.Ctx, alias)
+		if err != nil {
+			s.Logger.Info("GetOriginalURL.err - не удалось найтти оригинальный URL для - " + alias)
+			return ""
+		}
+		return org.OriginalURL
+	}
+	return ""
 }
 
 func (s *Short) getFull(alias string) string {
@@ -43,7 +59,7 @@ func (s *Short) GetAliasName(aliasURL string) (string, error) {
 }
 
 func (s *Short) write(event *model.AliasFullCore) error {
-	err := s.File.Encoder.Encode(event)
+	err := s.FileStorage.Encoder.Encode(event)
 	if err != nil {
 		return err
 	}
@@ -65,7 +81,7 @@ func (s *Short) checkSourse() string {
 	if s.conn != nil {
 		return model.DATABASE
 	}
-	if s.File != nil {
+	if s.FileStorage != nil {
 		return model.FILE
 	}
 	return model.CACHE
