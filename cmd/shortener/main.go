@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,6 +14,12 @@ import (
 	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
 	"github.com/tartushkin/TSHORT.git/internal/handler"
 	sr "github.com/tartushkin/TSHORT.git/internal/service"
+)
+
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
 )
 
 /*
@@ -32,6 +39,7 @@ main запускает HTTP-сервер для сокращения URL.
   - Хендлеры: internal/handler
 */
 func main() {
+	buildInfo()
 	lg := logrus.New()
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -66,4 +74,11 @@ func main() {
 		}
 		sh.Fmem.Close()
 	}
+}
+
+func buildInfo() {
+	// Выводим информацию о сборке
+	fmt.Printf("Build version: %s\n", buildVersion)
+	fmt.Printf("Build date: %s\n", buildDate)
+	fmt.Printf("Build commit: %s\n", buildCommit)
 }
