@@ -43,7 +43,7 @@ func main() {
 	lg := logrus.New()
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
-	cfg := cfg.NewConfig()                  // инициализация конфига
+	cfg := cfg.NewConfig(lg)                // инициализация конфига
 	sh, dis, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
 	if err != nil {
 		lg.Error("ошибка инициализация сервиса", "error", err)
