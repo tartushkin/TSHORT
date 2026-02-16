@@ -53,7 +53,7 @@ func main() {
 
 	h := handler.NewHandlers(dis, sh)
 	go func() {
-		if err := h.StartHTTP(ctx, cfg.Port, cfg.SecretKey); err != nil && err != http.ErrServerClosed {
+		if err := h.StartHTTP(ctx, cfg); err != nil && err != http.ErrServerClosed {
 			lg.Error("ошибка HTTP-сервера", "error", err)
 			cancel()
 		}

@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 
+	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
@@ -40,8 +42,8 @@ func NewHandlers(dis *audit.Dispatcher, short *service.Short) *Handlers {
 }
 
 // StartHTTP - инициализация и запуск сервера
-func (h *Handlers) StartHTTP(ctx context.Context, httpPort, sk string) error {
-	h.secret = sk
+func (h *Handlers) StartHTTP(ctx context.Context, cfg *cfg.Config) error {
+	h.secret = cfg.SecretKey
 	h.httpServer = echo.New()
 	h.httpServer.Use(middleware.Logger()) //в билиотеке уже есть middleware для логирования запрсов
 	h.httpServer.Use(middleware.Recover())
@@ -83,10 +85,18 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort, sk string) error {
 		h.Short.Logger.Info("Контекст завершен")
 		h.StopHTTP(ctx)
 	}()
-
-	if err := h.httpServer.Start(httpPort); err != nil && err != http.ErrServerClosed {
-		h.Short.Logger.Error("HTTP сервер завершился с ошибкой", "error", err)
+	if cfg.TLSconn {
+		h.Short.Logger.Info("StartHTTP - запущен HTTPS сервер")
+		if err := h.httpServer.StartTLS(cfg.Port, cfg.СertFile, cfg.KeyFile); err != nil && err != http.ErrServerClosed {
+			h.Short.Logger.Error("HTTP сервер завершился с ошибкой", "error", err)
+		}
+	} else {
+		h.Short.Logger.Info("StartHTTP - запущен HTTP сервер")
+		if err := h.httpServer.Start(cfg.Port); err != nil && err != http.ErrServerClosed {
+			h.Short.Logger.Error("HTTP сервер завершился с ошибкой", "error", err)
+		}
 	}
+
 	return nil
 }
 
