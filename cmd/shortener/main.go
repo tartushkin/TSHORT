@@ -41,7 +41,7 @@ main запускает HTTP-сервер для сокращения URL.
 func main() {
 	buildInfo()
 	lg := logrus.New()
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 	defer cancel()
 	cfg := cfg.NewConfig()                  // инициализация конфига
 	sh, dis, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
