@@ -38,7 +38,8 @@ func main() {
 	cfg := cfg.NewConfig()                  // инициализация конфига
 	sh, dis, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
 	if err != nil {
-		panic(err)
+		lg.Error("ошибка инициализация сервиса", "error", err)
+		return
 	}
 	defer sh.Close()
 
@@ -61,7 +62,7 @@ func main() {
 		err := sh.MemProfile()
 		if err != nil {
 			lg.Error("ошибка профилирования памяти", "error", err)
-			cancel()
+			//cancel()
 		}
 		sh.Fmem.Close()
 	}
