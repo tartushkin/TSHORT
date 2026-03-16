@@ -1,4 +1,4 @@
-package exitcheck
+package exitchecker
 
 import (
 	"go/ast"
