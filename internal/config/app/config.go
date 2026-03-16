@@ -15,6 +15,11 @@ import (
 	"os"
 )
 
+const (
+	trueV  = "true"
+	falseV = "false"
+)
+
 // Config хранит параметры конфигурации приложения.
 type Config struct {
 	// Port — порт, на котором запускается HTTP-сервер.
@@ -49,6 +54,10 @@ type Config struct {
 	RunProfile bool
 
 	runProfile bool
+
+	TLSconn  bool
+	СertFile string
+	KeyFile  string
 }
 
 // NewConfig - создание конфигурации приложения.
@@ -66,6 +75,8 @@ func NewConfig() *Config {
 	flag.StringVar(&cfg.Address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&cfg.FileStoragePath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
 	flag.StringVar(&cfg.DNS, "d", "postgres://postgres:12345678@localhost:5432/myDB?sslmode=disable", "cтрока с адресом подключения к БД")
+	flag.BoolVar(&cfg.TLSconn, "s", false, " возможность включения HTTPS в веб-сервере")
+
 	// аудит
 	flag.StringVar(&cfg.LocalAuditPath, "audit-file", "./Audit.TXT", "cтрока с адресом подключения к локальному аудит файлу")
 	flag.StringVar(&cfg.AuditPath, "audit-url", "", "cтрока с адресом подключения к внешнему аудит")
@@ -90,6 +101,21 @@ func NewConfig() *Config {
 	}
 	if db, exists := os.LookupEnv("DATABASE_DSN"); exists && db != "" {
 		cfg.DNS = db
+	}
+	if sec, exists := os.LookupEnv("ENABLE_HTTPS"); exists && sec != "" {
+		if sec == trueV {
+			cfg.TLSconn = true
+		} else {
+			cfg.TLSconn = false
+		}
+	}
+
+	// Переопределяем пути к сертификату и ключу из переменных окружения, если они заданы
+	if envCertFile, exists := os.LookupEnv("CERT_FILE"); exists {
+		cfg.СertFile = envCertFile
+	}
+	if envKeyFile, exists := os.LookupEnv("KEY_FILE"); exists {
+		cfg.KeyFile = envKeyFile
 	}
 
 	//audit
