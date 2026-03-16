@@ -11,38 +11,41 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
-	trueV  = "true"
-	falseV = "false"
+	trueV = "true"
 )
 
 // Config хранит параметры конфигурации приложения.
 type Config struct {
 	// Port — порт, на котором запускается HTTP-сервер.
 	// Флаг: -a, переменная: SERVER_ADDRESS
-	Port string
+	Port string `json:"server_addr"`
 	// Address — базовый URL для генерации сокращённых ссылок.
 	// Флаг: -b, переменная: BASE_URL
-	Address string
+	Address string `json:"base_url"`
 	// FileStoragePath — путь к файлу для хранения URL (если используется файловое хранилище).
 	// Флаг: -c, переменная: FILE_STORAGE_PATH
 
-	FileStoragePath string
+	FileStoragePath string `json:"file_storage_path"`
 
 	// DNS — строка подключения к PostgreSQL.
 	// Флаг: -d, переменная: DATABASE_DSN
-	DNS string
+	DNS string `json:"database_dsn"`
 
 	// LocalAuditPath — путь к локальному файлу аудита.
 	// Флаг: -audit-file, переменная: AUDIT_FILE
-	LocalAuditPath string
+	LocalAuditPath string `json:"audit_file"`
 	// AuditPath — URL внешнего сервиса аудита.
 	// Флаг: -audit-url, переменная: AUDIT_URL
-	AuditPath string
+	AuditPath string `json:"audit_url"`
 	// ParamDelete — интервал (в секундах) проверки помеченных на удаление URL.
 	// Флаг: -t
 	ParamDelete int
@@ -55,9 +58,10 @@ type Config struct {
 
 	runProfile bool
 
-	TLSconn  bool
-	СertFile string
-	KeyFile  string
+	TLSconn  bool   `json:"enable_tls"`
+	CertFile string `json:"path_cert"`
+	KeyFile  string `json:"path_key"`
+	ConfPath string
 }
 
 // NewConfig - создание конфигурации приложения.
@@ -68,8 +72,13 @@ type Config struct {
 // 3. Значения по умолчанию
 //
 // Возвращает указатель на инициализированный *Config.
-func NewConfig() *Config {
+func NewConfig(lg *logrus.Logger) *Config {
 	cfg := Config{}
+	flag.StringVar(&cfg.ConfPath, "config", "", "путь для файла c конфигурацией")
+	if cfg.ConfPath != "" {
+		err := cfg.applyConfigIfEmpty()
+		lg.Info("NewConfig.err - ошибка при загрузке файла конфигурации: ", err.Error())
+	}
 	// обязательные
 	flag.StringVar(&cfg.Port, "a", ":8080", "порт сервиса")
 	flag.StringVar(&cfg.Address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
@@ -112,7 +121,7 @@ func NewConfig() *Config {
 
 	// Переопределяем пути к сертификату и ключу из переменных окружения, если они заданы
 	if envCertFile, exists := os.LookupEnv("CERT_FILE"); exists {
-		cfg.СertFile = envCertFile
+		cfg.CertFile = envCertFile
 	}
 	if envKeyFile, exists := os.LookupEnv("KEY_FILE"); exists {
 		cfg.KeyFile = envKeyFile
@@ -125,5 +134,54 @@ func NewConfig() *Config {
 	if auditURL, exists := os.LookupEnv("AUDIT_URL"); exists && auditURL != "" {
 		cfg.AuditPath = auditURL
 	}
+
+	if confPath, exists := os.LookupEnv("CONFIG"); exists && confPath != "" {
+		cfg.ConfPath = confPath
+	}
+
 	return &cfg
+}
+
+func (cfg *Config) applyConfigIfEmpty() error {
+	// Чтение конфигурационного файла JSON, если указан путь
+	var fileConfig Config
+	if cfg.ConfPath != "" {
+		file, err := os.ReadFile(cfg.ConfPath)
+		if err != nil {
+			return fmt.Errorf("ошибка чтения файла конфигурации: %w", err)
+		}
+		err = json.Unmarshal(file, &fileConfig)
+		if err != nil {
+			return fmt.Errorf("ошибка разбора файла конфигурации: %w", err)
+		}
+	}
+
+	if fileConfig.Port != "" {
+		cfg.Port = fileConfig.Port
+	}
+	if fileConfig.Address != "" {
+		cfg.Address = fileConfig.Address
+	}
+	if fileConfig.FileStoragePath != "" {
+		cfg.FileStoragePath = fileConfig.FileStoragePath
+	}
+	if fileConfig.DNS != "" {
+		cfg.DNS = fileConfig.DNS
+	}
+	if !fileConfig.TLSconn {
+		cfg.TLSconn = fileConfig.TLSconn
+	}
+	if fileConfig.LocalAuditPath != "" {
+		cfg.LocalAuditPath = fileConfig.LocalAuditPath
+	}
+	if fileConfig.AuditPath != "" {
+		cfg.AuditPath = fileConfig.AuditPath
+	}
+	if fileConfig.CertFile != "" {
+		cfg.CertFile = fileConfig.CertFile
+	}
+	if fileConfig.KeyFile != "" {
+		cfg.KeyFile = fileConfig.KeyFile
+	}
+	return nil
 }
