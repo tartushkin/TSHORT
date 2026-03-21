@@ -1,6 +1,6 @@
 module github.com/tartushkin/TSHORT.git
 
-go 1.25
+go 1.25.2
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.19.0
