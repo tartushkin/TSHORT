@@ -125,3 +125,18 @@ func (r *Repo) DeleteMarkedURLs(ctx context.Context) error {
 
 	return nil
 }
+
+// GetStats - получение количесвта записей и пользователей
+func (r *Repo) GetStats(ctx context.Context) (int, int, error) {
+	var url, users int
+
+	err := r.conn.QueryRowContext(ctx,
+		`SELECT COUNT(*),
+         COUNT(DISTINCT s_user_id) FROM t_short.t_list;
+    `).Scan(&url, &users)
+
+	if err != nil {
+		return 0, 0, err
+	}
+	return url, users, nil
+}

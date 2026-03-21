@@ -69,6 +69,6 @@ type UserURLResponse struct {
 }
 
 type Stats struct {
-	Urls  int `json:"urls"`
-	Users int `json:"users"`
+	Url  int `json:"urls"`
+	User int `json:"users"`
 }

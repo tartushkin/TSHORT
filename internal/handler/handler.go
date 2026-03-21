@@ -230,13 +230,30 @@ func (h *Handlers) deleteURL(ctx echo.Context) error {
 	}
 	err = h.Short.DeleteUserURL(userID, deleteList)
 	if err != nil {
-		h.Short.Logger.Error("Ошибка при отметке url на удаление: " + err.Error())
+		h.Short.Logger.Error("ошибка при отметке url на удаление: " + err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return ctx.NoContent(http.StatusAccepted)
 }
 
-func (h *Handlers) getStats(ctx echo.Context) error {
-	return nil
+func (h *Handlers) getStats(c echo.Context) error {
+	if len(h.subNet) == 0 {
+		return echo.NewHTTPError(http.StatusForbidden, "список доверительных подсетей пуст")
+	}
+	xRealIP := c.Request().Header.Get("X-Real-IP")
+	if xRealIP == "" {
+		return echo.NewHTTPError(http.StatusForbidden, "заголовок: X-Real-IP - отсутствует")
+	}
+	// Проверяем, входит ли IP-адрес в доверенную подсеть
+	if !h.trustSubNet(xRealIP) {
+		return echo.NewHTTPError(http.StatusForbidden, " IP не входит в доверенную подсеть")
+
+	}
+	stats, err := h.Short.GetStats()
+	if err != nil {
+		h.Short.Logger.Error("ошибка при попытке получить статистику: " + err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, stats)
 }

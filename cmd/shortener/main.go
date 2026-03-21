@@ -51,7 +51,7 @@ func main() {
 	}
 	defer sh.Close()
 
-	h := handler.NewHandlers(dis, sh)
+	h := handler.NewHandlers(dis, sh, cfg.SubNet)
 	go func() {
 		if err := h.StartHTTP(ctx, cfg); err != nil && err != http.ErrServerClosed {
 			lg.Error("ошибка HTTP-сервера", "error", err)
