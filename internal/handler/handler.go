@@ -248,8 +248,8 @@ func (h *Handlers) getStats(c echo.Context) error {
 	// Проверяем, входит ли IP-адрес в доверенную подсеть
 	if !h.trustSubNet(xRealIP) {
 		return echo.NewHTTPError(http.StatusForbidden, " IP не входит в доверенную подсеть")
-
 	}
+
 	stats, err := h.Short.GetStats()
 	if err != nil {
 		h.Short.Logger.Error("ошибка при попытке получить статистику: " + err.Error())
