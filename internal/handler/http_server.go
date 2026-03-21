@@ -77,6 +77,7 @@ func (h *Handlers) StartHTTP(ctx context.Context, httpPort, sk string) error {
 	h.httpServer.POST("/api/shorten/batch", h.batchHandler)
 	h.httpServer.GET("/api/user/urls", h.getMyShortURL)
 	h.httpServer.DELETE("/api/user/urls", h.deleteURL)
+	h.httpServer.GET("/api/internal/stats", h.getStats)
 
 	go func() {
 		<-ctx.Done()

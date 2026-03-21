@@ -236,3 +236,7 @@ func (h *Handlers) deleteURL(ctx echo.Context) error {
 
 	return ctx.NoContent(http.StatusAccepted)
 }
+
+func (h *Handlers) getStats(ctx echo.Context) error {
+	return nil
+}
