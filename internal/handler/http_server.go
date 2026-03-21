@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 
@@ -26,6 +27,7 @@ type Handlers struct {
 	httpServer *echo.Echo
 	secret     string
 	dis        *audit.Dispatcher
+	subNet     []string
 }
 
 type compressWriter struct {
@@ -37,8 +39,8 @@ type compressReader struct {
 	zr *gzip.Reader
 }
 
-func NewHandlers(dis *audit.Dispatcher, short *service.Short) *Handlers {
-	return &Handlers{Short: short, dis: dis}
+func NewHandlers(dis *audit.Dispatcher, short *service.Short, subNet []string) *Handlers {
+	return &Handlers{Short: short, dis: dis, subNet: subNet}
 }
 
 // StartHTTP - инициализация и запуск сервера
@@ -79,6 +81,7 @@ func (h *Handlers) StartHTTP(ctx context.Context, cfg *cfg.Config) error {
 	h.httpServer.POST("/api/shorten/batch", h.batchHandler)
 	h.httpServer.GET("/api/user/urls", h.getMyShortURL)
 	h.httpServer.DELETE("/api/user/urls", h.deleteURL)
+	h.httpServer.GET("/api/internal/stats", h.getStats)
 
 	go func() {
 		<-ctx.Done()
@@ -224,4 +227,23 @@ func (h *Handlers) Audit(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (h *Handlers) withAudit(handler echo.HandlerFunc) echo.HandlerFunc {
 	return h.Audit(handler)
+}
+
+// trustSubNet - проверка доверительных подсетей
+func (h *Handlers) trustSubNet(ipStr string) bool {
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return false
+	}
+	for _, subnet := range h.subNet {
+		_, cidr, err := net.ParseCIDR(subnet)
+		if err != nil {
+			continue
+		}
+		if cidr.Contains(ip) {
+			return true
+		}
+	}
+
+	return false
 }
