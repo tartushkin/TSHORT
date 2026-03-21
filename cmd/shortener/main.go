@@ -43,7 +43,7 @@ func main() {
 	lg := logrus.New()
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 	defer cancel()
-	cfg := cfg.NewConfig()                  // инициализация конфига
+	cfg := cfg.NewConfig(lg)                // инициализация конфига
 	sh, dis, err := sr.Create(ctx, lg, cfg) // инициализация сервиса
 	if err != nil {
 		lg.Error("ошибка инициализация сервиса", "error", err)
@@ -53,7 +53,7 @@ func main() {
 
 	h := handler.NewHandlers(dis, sh)
 	go func() {
-		if err := h.StartHTTP(ctx, cfg.Port, cfg.SecretKey); err != nil && err != http.ErrServerClosed {
+		if err := h.StartHTTP(ctx, cfg); err != nil && err != http.ErrServerClosed {
 			lg.Error("ошибка HTTP-сервера", "error", err)
 			cancel()
 		}

@@ -1,0 +1,11 @@
+{
+  "server_addr": ":8080",
+  "base_url": "http://localhost:8080",
+  "file_storage_path": "./StorageURL.TXT",
+  "database_dsn": "postgres://postgres:12345678@localhost:5432/myDB?sslmode=disable",
+  "audit_file":  "./Audit.TXT",
+  "audit_url": "",
+  "enable_tls": false,
+  "path_cert": "",
+  "path_key": ""
+}
