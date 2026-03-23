@@ -1,0 +1,41 @@
+// protoc   --go_out=.   --go-grpc_out=.   --go_opt=paths=source_relative   --go-grpc_opt=paths=source_relative   shortservice.proto
+syntax = "proto3";
+
+package shortenerservice;
+
+option go_package = "tartushkin/TSHORT.git/pkg/shortenerservice";
+
+
+message Empty {}
+message URLShortenRequest {
+  string url = 1;
+}
+
+message URLShortenResponse {
+  string result = 1;
+}
+
+message URLExpandRequest {
+  string id = 1;
+}
+
+message URLExpandResponse {
+  string result = 1;
+}
+
+
+message UserURLsResponse {
+  repeated URLData url = 1;
+}
+
+message URLData {
+  string short_url = 1;
+  string original_url = 2;
+}
+
+
+service ShortenerService {
+  rpc ShortenURL (URLShortenRequest) returns (URLShortenResponse);
+  rpc ExpandURL (URLExpandRequest) returns (URLExpandResponse);
+  rpc ListUserURLs (Empty) returns (UserURLsResponse);
+}

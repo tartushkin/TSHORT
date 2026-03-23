@@ -13,6 +13,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	pb "github.com/tartushkin/TSHORT.git/pkg/shortenerservice"
+
 	"github.com/tartushkin/TSHORT.git/internal/audit"
 	cfg "github.com/tartushkin/TSHORT.git/internal/config/app"
 	"github.com/tartushkin/TSHORT.git/internal/config/db"
@@ -23,6 +25,7 @@ import (
 const defaultParamDelete = 20 // дефолтный параметр на запуска процесса уадаления
 // Short — основной сервис для работы с URL.
 type Short struct {
+	pb.UnimplementedShortenerServiceServer
 	mu sync.RWMutex
 
 	Logger *logrus.Logger
@@ -52,7 +55,7 @@ func Create(ctx context.Context, lg *logrus.Logger, cfg *cfg.Config) (*Short, *a
 		Logger:   lg,
 		Ctx:      ctx,
 		CacheURL: cacheURL,
-		HTTPPort: cfg.Port,
+		HTTPPort: cfg.HTTPPort,
 		Address:  cfg.Address,
 		//Dis:      audit.NewDispatcher(),
 	}

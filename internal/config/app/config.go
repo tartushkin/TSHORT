@@ -26,9 +26,10 @@ const (
 
 // Config хранит параметры конфигурации приложения.
 type Config struct {
+	GRPCPort string `json:"servergrpc_addr"`
 	// Port — порт, на котором запускается HTTP-сервер.
 	// Флаг: -a, переменная: SERVER_ADDRESS
-	Port string `json:"server_addr"`
+	HTTPPort string `json:"server_addr"`
 	// Address — базовый URL для генерации сокращённых ссылок.
 	// Флаг: -b, переменная: BASE_URL
 	Address string `json:"base_url"`
@@ -82,7 +83,8 @@ func NewConfig(lg *logrus.Logger) *Config {
 		lg.Info("NewConfig.err - ошибка при загрузке файла конфигурации: ", err.Error())
 	}
 	// обязательные
-	flag.StringVar(&cfg.Port, "a", ":8080", "порт сервиса")
+	flag.StringVar(&cfg.GRPCPort, "o", ":7070", "GRPC-порт сервиса")
+	flag.StringVar(&cfg.HTTPPort, "a", ":8080", "HTTP-порт сервиса")
 	flag.StringVar(&cfg.Address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&cfg.FileStoragePath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
 	flag.StringVar(&cfg.DNS, "d", "postgres://postgres:12345678@localhost:5432/myDB?sslmode=disable", "cтрока с адресом подключения к БД")
@@ -105,7 +107,7 @@ func NewConfig(lg *logrus.Logger) *Config {
 	}
 	// переменные окружения (имеют приоритет)
 	if runAddr, exists := os.LookupEnv("SERVER_ADDRESS"); exists && runAddr != "" {
-		cfg.Port = runAddr
+		cfg.HTTPPort = runAddr
 	}
 
 	if baseURL, exists := os.LookupEnv("BASE_URL"); exists && baseURL != "" {
@@ -166,8 +168,8 @@ func (cfg *Config) applyConfigIfEmpty() error {
 		}
 	}
 
-	if fileConfig.Port != "" {
-		cfg.Port = fileConfig.Port
+	if fileConfig.HTTPPort != "" {
+		cfg.HTTPPort = fileConfig.HTTPPort
 	}
 	if fileConfig.Address != "" {
 		cfg.Address = fileConfig.Address

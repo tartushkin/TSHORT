@@ -58,7 +58,15 @@ func main() {
 			cancel()
 		}
 	}()
-	lg.Info("HTTP-сервер запущен", "port", cfg.Port)
+	lg.Info("HTTP-сервер запущен", "port", cfg.HTTPPort)
+
+	go func() {
+		if err := sh.StartGRPC(cfg.GRPCPort); err != nil && err != http.ErrServerClosed {
+			lg.Error("ошибка HTTP-сервера", "error", err)
+			cancel()
+		}
+	}()
+	lg.Info("GRPC-сервер запущен", "port", cfg.GRPCPort)
 
 	// Ждём сигнала остановки
 	<-ctx.Done()

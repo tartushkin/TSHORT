@@ -90,12 +90,12 @@ func (h *Handlers) StartHTTP(ctx context.Context, cfg *cfg.Config) error {
 	}()
 	if cfg.TLSconn {
 		h.Short.Logger.Info("StartHTTP - запущен HTTPS сервер")
-		if err := h.httpServer.StartTLS(cfg.Port, cfg.CertFile, cfg.KeyFile); err != nil && err != http.ErrServerClosed {
+		if err := h.httpServer.StartTLS(cfg.HTTPPort, cfg.CertFile, cfg.KeyFile); err != nil && err != http.ErrServerClosed {
 			h.Short.Logger.Error("HTTP сервер завершился с ошибкой", "error", err)
 		}
 	} else {
 		h.Short.Logger.Info("StartHTTP - запущен HTTP сервер")
-		if err := h.httpServer.Start(cfg.Port); err != nil && err != http.ErrServerClosed {
+		if err := h.httpServer.Start(cfg.HTTPPort); err != nil && err != http.ErrServerClosed {
 			h.Short.Logger.Error("HTTP сервер завершился с ошибкой", "error", err)
 		}
 	}
