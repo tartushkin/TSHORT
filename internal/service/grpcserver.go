@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/tartushkin/TSHORT.git/internal/model"
 	pb "github.com/tartushkin/TSHORT.git/pkg/shortenerservice"
@@ -25,12 +26,14 @@ func (sh *Short) getUserId(ctx context.Context) (string, error) {
 		sh.Logger.Infof("Ключ: %s, Значения: %v", key, values)
 	}
 	// Получаем ID пользователя из метаданных
-	userIDs := md.Get("userID")
-	if len(userIDs) == 0 {
+	auth := md.Get("authorization")
+	if len(auth) == 0 {
 		return "", errors.New("user ID отсутствуют")
 	}
+	parts := strings.SplitN(auth[0], ".", 2)
+	userID := parts[0]
 
-	userID := userIDs[0]
+	//userID := userIDs[0]
 	sh.Logger.Info("User ID: ", userID)
 	return userID, nil
 }
