@@ -15,6 +15,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -25,9 +26,10 @@ const (
 
 // Config хранит параметры конфигурации приложения.
 type Config struct {
+	GRPCPort string `json:"servergrpc_addr"`
 	// Port — порт, на котором запускается HTTP-сервер.
 	// Флаг: -a, переменная: SERVER_ADDRESS
-	Port string `json:"server_addr"`
+	HTTPPort string `json:"server_addr"`
 	// Address — базовый URL для генерации сокращённых ссылок.
 	// Флаг: -b, переменная: BASE_URL
 	Address string `json:"base_url"`
@@ -62,6 +64,7 @@ type Config struct {
 	CertFile string `json:"path_cert"`
 	KeyFile  string `json:"path_key"`
 	ConfPath string
+	SubNet   []string `json:"trusted_subnet"`
 }
 
 // NewConfig - создание конфигурации приложения.
@@ -80,25 +83,31 @@ func NewConfig(lg *logrus.Logger) *Config {
 		lg.Info("NewConfig.err - ошибка при загрузке файла конфигурации: ", err.Error())
 	}
 	// обязательные
-	flag.StringVar(&cfg.Port, "a", ":8080", "порт сервиса")
+	flag.StringVar(&cfg.GRPCPort, "o", ":7070", "GRPC-порт сервиса")
+	flag.StringVar(&cfg.HTTPPort, "a", ":8080", "HTTP-порт сервиса")
 	flag.StringVar(&cfg.Address, "b", "http://localhost:8080", "базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&cfg.FileStoragePath, "c", "./StorageURL.TXT", "путь для файла хранения URL")
 	flag.StringVar(&cfg.DNS, "d", "postgres://postgres:12345678@localhost:5432/myDB?sslmode=disable", "cтрока с адресом подключения к БД")
 	flag.BoolVar(&cfg.TLSconn, "s", false, " возможность включения HTTPS в веб-сервере")
+	var subNetList string
+	flag.StringVar(&subNetList, "t", "192.168.2.0/24,10.0.0.0/8", "представление бесклассовой адресации (CIDR)")
 
 	// аудит
 	flag.StringVar(&cfg.LocalAuditPath, "audit-file", "./Audit.TXT", "cтрока с адресом подключения к локальному аудит файлу")
 	flag.StringVar(&cfg.AuditPath, "audit-url", "", "cтрока с адресом подключения к внешнему аудит")
 
 	// индивидуальные
-	flag.IntVar(&cfg.ParamDelete, "t", 20, "частота запуска очистки от помеченных на удаление URL")
+	flag.IntVar(&cfg.ParamDelete, "x", 20, "частота запуска очистки от помеченных на удаление URL")
 	flag.StringVar(&cfg.SecretKey, "k", "tort-secret-key", "ключ")
 	flag.BoolVar(&cfg.runProfile, "p", false, "флаг необходимоти профилирования сервиса")
 
 	flag.Parse()
+	if subNetList != "" {
+		cfg.SubNet = strings.Split(subNetList, ",")
+	}
 	// переменные окружения (имеют приоритет)
 	if runAddr, exists := os.LookupEnv("SERVER_ADDRESS"); exists && runAddr != "" {
-		cfg.Port = runAddr
+		cfg.HTTPPort = runAddr
 	}
 
 	if baseURL, exists := os.LookupEnv("BASE_URL"); exists && baseURL != "" {
@@ -138,6 +147,9 @@ func NewConfig(lg *logrus.Logger) *Config {
 	if confPath, exists := os.LookupEnv("CONFIG"); exists && confPath != "" {
 		cfg.ConfPath = confPath
 	}
+	if subNets, exists := os.LookupEnv("TRUSTED_SUBNET"); exists && subNets != "" {
+		cfg.SubNet = strings.Split(subNets, ",")
+	}
 
 	return &cfg
 }
@@ -156,8 +168,8 @@ func (cfg *Config) applyConfigIfEmpty() error {
 		}
 	}
 
-	if fileConfig.Port != "" {
-		cfg.Port = fileConfig.Port
+	if fileConfig.HTTPPort != "" {
+		cfg.HTTPPort = fileConfig.HTTPPort
 	}
 	if fileConfig.Address != "" {
 		cfg.Address = fileConfig.Address
@@ -182,6 +194,9 @@ func (cfg *Config) applyConfigIfEmpty() error {
 	}
 	if fileConfig.KeyFile != "" {
 		cfg.KeyFile = fileConfig.KeyFile
+	}
+	if len(fileConfig.SubNet) > 0 {
+		cfg.SubNet = fileConfig.SubNet
 	}
 	return nil
 }

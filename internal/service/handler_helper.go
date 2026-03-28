@@ -174,3 +174,15 @@ func (s *Short) DeleteUserURL(userID string, deleteList []string) error {
 	}
 	return nil
 }
+
+// GetStats - получение статистики
+func (s *Short) GetStats() (*model.Stats, error) {
+	stats := model.Stats{}
+	url, user, err := s.Repo.GetStats(s.Ctx)
+	if err != nil {
+		return nil, err
+	}
+	stats.Url = url
+	stats.User = user
+	return &stats, nil
+}

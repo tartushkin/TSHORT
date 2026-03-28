@@ -51,14 +51,22 @@ func main() {
 	}
 	defer sh.Close()
 
-	h := handler.NewHandlers(dis, sh)
+	h := handler.NewHandlers(dis, sh, cfg.SubNet)
 	go func() {
 		if err := h.StartHTTP(ctx, cfg); err != nil && err != http.ErrServerClosed {
 			lg.Error("ошибка HTTP-сервера", "error", err)
 			cancel()
 		}
 	}()
-	lg.Info("HTTP-сервер запущен", "port", cfg.Port)
+	lg.Info("HTTP-сервер запущен", "port", cfg.HTTPPort)
+
+	go func() {
+		if err := sh.StartGRPC(cfg.GRPCPort); err != nil && err != http.ErrServerClosed {
+			lg.Error("ошибка HTTP-сервера", "error", err)
+			cancel()
+		}
+	}()
+	lg.Info("GRPC-сервер запущен", "port", cfg.GRPCPort)
 
 	// Ждём сигнала остановки
 	<-ctx.Done()
